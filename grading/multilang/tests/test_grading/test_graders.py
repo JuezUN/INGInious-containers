@@ -2,11 +2,9 @@ import pytest
 import os
 import re
 import json
-from unittest.mock import MagicMock
-from unittest.mock import call
 from pytest import approx
-
-import inginious
+from unittest.mock import MagicMock
+from unittest import mock
 
 from grading.graders import grade_with_partial_scores, run_against_custom_input, generate_test_files_tuples
 from grading import graders
@@ -69,7 +67,7 @@ class TestGrader(object):
 
         feedback.set_global_result.assert_called_with("success")
 
-        custom_value_calls = [call("custom_stdout", stdout), call("custom_stderr", stderr)]
+        custom_value_calls = [mock.call("custom_stdout", stdout), mock.call("custom_stderr", stderr)]
         feedback.set_custom_value.assert_has_calls(custom_value_calls, any_order=True)
 
     def test_run_with_custom_input_memory_limit(self):
@@ -84,7 +82,7 @@ class TestGrader(object):
 
         feedback.set_global_result.assert_called_with("failed")
 
-        custom_value_calls = [call("custom_stdout", stdout), call("custom_stderr", stderr)]
+        custom_value_calls = [mock.call("custom_stdout", stdout), mock.call("custom_stderr", stderr)]
         feedback.set_custom_value.assert_has_calls(custom_value_calls, any_order=True)
 
     @pytest.mark.parametrize("options", [{}, {"treat_non_zero_as_runtime_error": False}])
@@ -303,7 +301,7 @@ class TestGrader(object):
         assert(len(re.findall(r'WRONG[ _-]ANSWER', global_feedback_string)) == 1)
 
     def test_grade_with_partial_scores_includes_summary_result(self):
-        summary_result = GraderResult.WRONG_ANSWER
+        summary_result = GraderResult.TIME_LIMIT_EXCEEDED
 
         def compute_summary_result(_):
             return summary_result
@@ -314,7 +312,8 @@ class TestGrader(object):
         tests = ["AC.txt"]
         full_path_test_cases = self.build_full_named_test_pairs(tests)
 
-        grade_with_partial_scores(project, full_path_test_cases, feedback=feedback)
+        with mock.patch('grading.graders._compute_summary_result', compute_summary_result):
+            grade_with_partial_scores(project, full_path_test_cases, feedback=feedback)
 
         feedback.set_custom_value.assert_called_with("summary_result", summary_result.name)
 
