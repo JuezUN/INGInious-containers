@@ -1,18 +1,22 @@
 import pytest
 import subprocess
-from unittest import mock
+from grading.projects.factories import _initialize_factories
+from grading.projects.factories.utils import SandboxRunner
+
 
 @pytest.fixture
 def fake_sandbox():
-    def run_command(command, **subprocess_options):
-        completed_process = subprocess.run(command, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, **subprocess_options)
+    class FakeSandboxRunner(SandboxRunner):
+        def run_command(self, command, **subprocess_options):
+            completed_process = subprocess.run(command, stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE, **subprocess_options)
 
-        stdout = completed_process.stdout.decode()
-        stderr = completed_process.stderr.decode()
-        return_code = completed_process.returncode
+            stdout = completed_process.stdout.decode()
+            stderr = completed_process.stderr.decode()
+            return_code = completed_process.returncode
 
-        return (return_code, stdout, stderr)
+            return return_code, stdout, stderr
 
-    with mock.patch('grading.projects._run_in_sandbox', run_command):
-        yield None
+    _initialize_factories(FakeSandboxRunner())
+    yield None
+    _initialize_factories()

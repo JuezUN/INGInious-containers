@@ -13,10 +13,12 @@ from grading import graders
 from grading.projects import Project, BuildError
 from grading.results import SandboxCodes, GraderResult
 
+
 def mock_project(return_code, stdout, stderr):
-    mock_project = MagicMock()
-    mock_project.run = MagicMock(return_value=(return_code, stdout, stderr))
-    return mock_project
+    mock = MagicMock()
+    mock.run = MagicMock(return_value=(return_code, stdout, stderr))
+    return mock
+
 
 class FakeProject(Project):
 
@@ -26,17 +28,18 @@ class FakeProject(Project):
     def run(self, input_file):
         file_content = input_file.read()
         if file_content == "TLE":
-            return (SandboxCodes.TIME_LIMIT.value, "", "")
+            return SandboxCodes.TIME_LIMIT.value, "", ""
         elif file_content == "MLE":
-            return (SandboxCodes.MEMORY_LIMIT.value, "", "")
+            return SandboxCodes.MEMORY_LIMIT.value, "", ""
         elif file_content == "CE":
             raise BuildError("The code did not compile")
         elif file_content == "RTE":
-            return (255, "", "")
+            return 255, "", ""
         elif file_content == "IE":
-            return (SandboxCodes.INTERNAL_ERROR.value, "", "")
+            return SandboxCodes.INTERNAL_ERROR.value, "", ""
         else:
-            return (0, "Accepted output", "")
+            return 0, "Accepted output", ""
+
 
 class TestGrader(object):
     def build_full_named_test_pairs(self, tests):
@@ -45,13 +48,13 @@ class TestGrader(object):
 
     def test_generate_test_files_tuples(self):
         assert generate_test_files_tuples(0) == []
-        assert generate_test_files_tuples(1) == [("in01.txt","out01.txt")]
+        assert generate_test_files_tuples(1) == [("in01.txt", "out01.txt")]
         assert generate_test_files_tuples(5) == [
-                                                  ("in01.txt","out01.txt"),
-                                                  ("in02.txt","out02.txt"),
-                                                  ("in03.txt","out03.txt"),
-                                                  ("in04.txt","out04.txt"),
-                                                  ("in05.txt","out05.txt")
+                                                  ("in01.txt", "out01.txt"),
+                                                  ("in02.txt", "out02.txt"),
+                                                  ("in03.txt", "out03.txt"),
+                                                  ("in04.txt", "out04.txt"),
+                                                  ("in05.txt", "out05.txt")
                                                 ]
 
     def test_run_with_custom_input_success(self):
@@ -317,17 +320,16 @@ class TestGrader(object):
 
     @pytest.mark.parametrize("grader_results,expected_summary", [
         ([GraderResult.COMPILATION_ERROR, GraderResult.TIME_LIMIT_EXCEEDED,
-        GraderResult.MEMORY_LIMIT_EXCEEDED, GraderResult.RUNTIME_ERROR, GraderResult.WRONG_ANSWER,
-        GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED], GraderResult.COMPILATION_ERROR),
+          GraderResult.MEMORY_LIMIT_EXCEEDED, GraderResult.RUNTIME_ERROR, GraderResult.WRONG_ANSWER,
+          GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED], GraderResult.COMPILATION_ERROR),
         ([GraderResult.TIME_LIMIT_EXCEEDED, GraderResult.MEMORY_LIMIT_EXCEEDED,
-        GraderResult.RUNTIME_ERROR, GraderResult.WRONG_ANSWER, GraderResult.INTERNAL_ERROR,
-        GraderResult.ACCEPTED], GraderResult.TIME_LIMIT_EXCEEDED),
+          GraderResult.RUNTIME_ERROR, GraderResult.WRONG_ANSWER, GraderResult.INTERNAL_ERROR,
+          GraderResult.ACCEPTED], GraderResult.TIME_LIMIT_EXCEEDED),
         ([GraderResult.MEMORY_LIMIT_EXCEEDED, GraderResult.RUNTIME_ERROR, GraderResult.WRONG_ANSWER,
-        GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED], GraderResult.MEMORY_LIMIT_EXCEEDED),
+          GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED], GraderResult.MEMORY_LIMIT_EXCEEDED),
         ([GraderResult.RUNTIME_ERROR, GraderResult.WRONG_ANSWER, GraderResult.INTERNAL_ERROR,
-        GraderResult.ACCEPTED], GraderResult.RUNTIME_ERROR),
-        ([GraderResult.WRONG_ANSWER, GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED],
-        GraderResult.WRONG_ANSWER),
+          GraderResult.ACCEPTED], GraderResult.RUNTIME_ERROR),
+        ([GraderResult.WRONG_ANSWER, GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED], GraderResult.WRONG_ANSWER),
         ([GraderResult.INTERNAL_ERROR, GraderResult.ACCEPTED], GraderResult.INTERNAL_ERROR),
         ([GraderResult.ACCEPTED], GraderResult.ACCEPTED)
     ])

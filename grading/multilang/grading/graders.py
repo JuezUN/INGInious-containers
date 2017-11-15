@@ -1,7 +1,4 @@
 from inginious import input, feedback
-import subprocess
-import io
-import os
 import json
 import rst
 import difflib
@@ -13,6 +10,7 @@ from . import projects
 from .results import GraderResult, parse_non_zero_return_code
 from zipfile import ZipFile
 
+
 def _check_output(actual_output, expected_output):
     """
     Compares the output of a program against an expected output. Returns true if the actual and the
@@ -20,6 +18,7 @@ def _check_output(actual_output, expected_output):
     """
 
     return actual_output == expected_output
+
 
 def _compute_diff(actual_output, expected_output, diff_context_lines, diff_max_lines):
     """
@@ -29,12 +28,12 @@ def _compute_diff(actual_output, expected_output, diff_context_lines, diff_max_l
     """
 
     diff_generator = difflib.unified_diff(expected_output.split('\n'), actual_output.split('\n'),
-        n=diff_context_lines, fromfile='expected_output', tofile='your_output')
+                                          n=diff_context_lines, fromfile='expected_output', tofile='your_output')
 
     # Remove file names (legend will be added in the frontend)
     start = 2
     diff_output = '\n'.join(itertools.islice(diff_generator, start,
-        start + diff_max_lines if diff_max_lines is not None else sys.maxsize))
+                                             start + diff_max_lines if diff_max_lines is not None else sys.maxsize))
 
     end_of_diff_reached = next(diff_generator, None) is None
 
@@ -42,6 +41,7 @@ def _compute_diff(actual_output, expected_output, diff_context_lines, diff_max_l
         diff_output += '\n...'
 
     return diff_output
+
 
 def _compute_single_feedback(project, input_file_name, expected_output_file_name, options=None):
     """
@@ -66,18 +66,14 @@ def _compute_single_feedback(project, input_file_name, expected_output_file_name
     check_output = options.get("check_output", _check_output)
     treat_non_zero_as_runtime_error = options.get("treat_non_zero_as_runtime_error", True)
 
-    return_code, stdout, stderr = None, None, None
     with open(input_file_name, 'r') as input_file:
         return_code, stdout, stderr = project.run(input_file)
-
-    expected_output = None
 
     with open(expected_output_file_name) as expected_output_file:
         expected_output = expected_output_file.read()
 
-    result = None
-
-    if return_code == 0 or (not treat_non_zero_as_runtime_error and parse_non_zero_return_code(return_code) == GraderResult.RUNTIME_ERROR):
+    if return_code == 0 or (not treat_non_zero_as_runtime_error and
+                            parse_non_zero_return_code(return_code) == GraderResult.RUNTIME_ERROR):
         output_matches = check_output(stdout, expected_output)
         result = GraderResult.ACCEPTED if output_matches else GraderResult.WRONG_ANSWER
     else:
@@ -100,6 +96,7 @@ def _compute_single_feedback(project, input_file_name, expected_output_file_name
 
     return result, debug_info
 
+
 def _compute_feedback(project, test_cases, options):
     """
     Computes the grader feedback for the given project against each of the provided test cases.
@@ -118,7 +115,7 @@ def _compute_feedback(project, test_cases, options):
         debug_info["files_feedback"] = {}
         for input_file_name, output_file_name in test_cases:
             grader_result, test_case_debug_info = _compute_single_feedback(project, input_file_name,
-                output_file_name, options)
+                                                                           output_file_name, options)
 
             debug_info["files_feedback"][input_file_name] = test_case_debug_info
             grader_results.append(grader_result)
@@ -129,11 +126,14 @@ def _compute_feedback(project, test_cases, options):
 
     return grader_results, debug_info
 
+
 def _generate_feedback_for_compilation_error(compilation_output):
     return "**Compilation error**:\n\n" + rst.get_html_block("<pre>%s</pre>" % (compilation_output,))
 
+
 def _compute_summary_result(grader_results):
     return min(grader_results)
+
 
 def run_against_custom_input(project, custom_input, feedback=feedback):
     """
@@ -143,9 +143,6 @@ def run_against_custom_input(project, custom_input, feedback=feedback):
     project -- A Project instance.
     custom_input -- A String with the input to be sent to the project.
     """
-
-    result = None
-    feedback_str = None
 
     custom_input_file_name = 'custom_input.txt'
     with open(custom_input_file_name, 'w') as input_file:
@@ -175,6 +172,7 @@ def run_against_custom_input(project, custom_input, feedback=feedback):
     feedback.set_global_result("success" if result == GraderResult.ACCEPTED else "failed")
     feedback.set_grade(100.0 if result == GraderResult.ACCEPTED else 0.0)
     feedback.set_global_feedback(feedback_str)
+
 
 def grade_with_partial_scores(project, test_cases, weights=None, options=None, feedback=feedback):
     """
@@ -233,7 +231,6 @@ def grade_with_partial_scores(project, test_cases, weights=None, options=None, f
                 )
 
                 diff_available = diff_result is not None
-                diff_html = None
 
                 if diff_available:
                     diff_html = """<ul><li><strong>Test {0}: {1} </strong>
@@ -249,15 +246,14 @@ def grade_with_partial_scores(project, test_cases, weights=None, options=None, f
                     diff_html = """<ul><li><strong>Test {0}: {1} </strong></li></ul>""".format(
                         i + 1, result.name)
 
-                feedback = rst.get_html_block(diff_html)
+                feedback_text = rst.get_html_block(diff_html)
             else:
-                feedback = '- **Test %d: %s**' % (i + 1, result.name)
+                feedback_text = '- **Test %d: %s**' % (i + 1, result.name)
 
-
-            return feedback
+            return feedback_text
 
         feedback_str = '\n\n'.join(generate_feedback_for_test(i, result)
-            for i, result in enumerate(results))
+                                   for i, result in enumerate(results))
 
     summary_result = _compute_summary_result(results)
 
@@ -266,6 +262,7 @@ def grade_with_partial_scores(project, test_cases, weights=None, options=None, f
     feedback.set_global_result("success" if passing == len(test_cases) else "failed")
     feedback.set_grade(score * 100.0 / total_sum)
     feedback.set_global_feedback(feedback_str)
+
 
 def handle_problem_action(problem_id, test_cases, language_name=None, options=None, weights=None):
     """
@@ -294,13 +291,13 @@ def handle_problem_action(problem_id, test_cases, language_name=None, options=No
     problem_type = input.get_input(problem_id + "/type")
 
     project = None
-    project_factory = projects.get_factory_from_name(language_name)
+    project_factory = projects.factories.get_factory_from_name(language_name)
 
     if problem_type == 'code-multiple-languages':
         project = project_factory.create_from_code(code)
 
     elif problem_type == 'code-file-multiple-languages':
-        project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
+        project_directory = tempfile.mkdtemp(dir=projects.utils.CODE_WORKING_DIR)
 
         with open(project_directory + ".zip", 'wb') as project_file:
             project_file.write(code)
@@ -314,6 +311,7 @@ def handle_problem_action(problem_id, test_cases, language_name=None, options=No
         return run_against_custom_input(project, custom_input)
     elif action == "submit":
         return grade_with_partial_scores(project, test_cases, weights, options)
+
 
 def generate_test_files_tuples(n):
     """

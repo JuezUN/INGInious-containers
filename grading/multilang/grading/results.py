@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 class GraderResult(IntEnum):
     """
     Represents a result of the grader. Results are ordered by precedence (lower values override
@@ -13,10 +14,12 @@ class GraderResult(IntEnum):
     INTERNAL_ERROR = 60
     ACCEPTED = 70
 
+
 class SandboxCodes(IntEnum):
     MEMORY_LIMIT = 252
     TIME_LIMIT = 253
     INTERNAL_ERROR = 254
+
 
 def parse_non_zero_return_code(return_code):
     assert return_code != 0

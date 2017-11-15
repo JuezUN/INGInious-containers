@@ -16,4 +16,4 @@ turns.insert(Reservation("Arroz", pedro))
 turns.insert(Reservation("Sopa", juan))
 turns.insert(Reservation("Pollo", mauricio))
 
-print( str(turns.next()) + " " + str(3/2) )
+print(str(turns.next()) + " " + str(3 / 2))
