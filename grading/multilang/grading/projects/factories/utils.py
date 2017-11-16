@@ -1,12 +1,45 @@
 import subprocess
-import resource
 import time
+import psutil
 import os
 from grading.results import GraderResult, parse_non_zero_return_code
 from grading.projects.project import RunResult
 from abc import ABCMeta, abstractmethod
 
 CODE_WORKING_DIR = '/task/student/'
+
+
+class ProcessProfiler(object):
+    def profile(self, *subprocess_args, poll_interval=0.1, **subprocess_kwargs):
+        initial_time = time.perf_counter()
+        process = psutil.Popen(*subprocess_args, **subprocess_kwargs)
+        max_memory_usage = 0
+
+        while process.poll() is None:
+            memory_usage = self._poll_memory_usage(process)
+            max_memory_usage = max(max_memory_usage, memory_usage)
+            time.sleep(poll_interval)
+
+        execution_time = time.perf_counter() - initial_time
+
+        return process, execution_time, max_memory_usage
+
+    def _poll_memory_usage(self, process):
+        related_processes = process.children(recursive=True) + [process]
+
+        memory_usage = 0
+        for related_process in related_processes:
+            try:
+                memory_info = related_process.memory_full_info()
+                memory_usage += memory_info.uss
+
+            except psutil.NoSuchProcess:
+                # This is an expected race condition.
+                pass
+
+        return memory_usage
+
+
 
 
 class SandboxRunner(metaclass=ABCMeta):
@@ -28,19 +61,16 @@ class InginiousSandboxRunner(SandboxRunner):
     Implementation of SandboxRunner that uses run_student as a sandbox.
     """
     def run_command(self, command, **subprocess_options):
-        initial_time = time.perf_counter()
-        process = subprocess.Popen(["run_student"] + command, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, **subprocess_options)
-
-        _, return_code, resource_usage = os.wait4(process.pid, 0)
-        execution_time = time.perf_counter() - initial_time
+        profiler = ProcessProfiler()
+        process, execution_time, max_memory_usage = profiler.profile(
+            ["run_student"] + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_options)
 
         stdout = process.stdout.read().decode()
         stderr = process.stderr.read().decode()
-        memory_usage = resource_usage.ru_maxrss
+        return_code = process.returncode
 
         return RunResult(return_code=return_code, stdout=stdout, stderr=stderr, execution_time=execution_time,
-                         memory_usage=memory_usage)
+                         memory_usage=max_memory_usage)
 
 
 def _get_compilation_message_from_return_code(return_code):

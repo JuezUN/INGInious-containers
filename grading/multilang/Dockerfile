@@ -13,7 +13,11 @@ RUN yum -y install java-1.7.0-openjdk-devel
 # Add gcc
 RUN     yum install -y gcc gcc-c++ gdb cpp make valgrind binutils libstdc++ clang clang-devel llvm automake check check-devel CUnit CUnit-devel zlib-devel openssl-devel time jansson-devel
 
+RUN     yum install -y python35u-devel
+
 RUN     yum clean all
+
+RUN     pip3.5 install psutil
 
 ADD     . /INGInious
 
