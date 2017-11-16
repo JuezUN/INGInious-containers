@@ -8,74 +8,66 @@ import os.path
 class TestPython2ProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("python2",
-                                                                    "python2/hello_world.py", "empty_input.txt")
+        result = run_code_with_project_factory("python2", "python2/hello_world.py", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_simple_project(self):
-        return_code, stdout, stderr = run_project_with_project_factory("python2",
-                                                                       "python2/simple_project",
-                                                                       "python2/simple_project/doctor_name.txt")
+        result = run_project_with_project_factory("python2", "python2/simple_project",
+                                                  "python2/simple_project/doctor_name.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello Dr Mauricio\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello Dr Mauricio\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_does_not_support_python3_features(self):
-        return_code, stdout, stderr = run_code_with_project_factory("python2",
-                                                                    "python3/python3_features.py", "empty_input.txt")
-        assert return_code != 0
+        result = run_code_with_project_factory("python2", "python3/python3_features.py", "empty_input.txt")
+        assert result.return_code != 0
 
 
 class TestPython3ProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("python3",
-                                                                    "python3/hello_world.py", "empty_input.txt")
+        result = run_code_with_project_factory("python3", "python3/hello_world.py", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_simple_project(self):
-        return_code, stdout, stderr = run_project_with_project_factory("python3",
-                                                                       "python3/simple_project", "empty_input.txt")
+        result = run_project_with_project_factory("python3", "python3/simple_project", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Frijoles Mauricio 1.5\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Frijoles Mauricio 1.5\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_python3_features(self):
-        return_code, stdout, stderr = run_code_with_project_factory("python3",
-                                                                    "python3/python3_features.py", "empty_input.txt")
-        assert return_code == 0
+        result = run_code_with_project_factory("python3", "python3/python3_features.py", "empty_input.txt")
+        assert result.return_code == 0
 
 
 class TestCppProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("cpp",
-                                                                    "cpp/hello_world.cpp", "empty_input.txt")
+        result = run_code_with_project_factory("cpp", "cpp/hello_world.cpp", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_simple_project(self):
-        return_code, stdout, stderr = run_project_with_project_factory("cpp",
-                                                                       "cpp/simple_project", "empty_input.txt")
+        result = run_project_with_project_factory("cpp", "cpp/simple_project", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello! This is a class\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello! This is a class\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_does_not_support_cpp11_features(self):
@@ -86,38 +78,34 @@ class TestCppProjectFactory(object):
 class TestCpp11ProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("cpp11",
-                                                                    "cpp11/hello_world.cpp", "empty_input.txt")
+        result = run_code_with_project_factory("cpp11", "cpp11/hello_world.cpp", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_simple_project(self):
-        return_code, stdout, stderr = run_project_with_project_factory("cpp11",
-                                                                       "cpp11/simple_project", "empty_input.txt")
+        result = run_project_with_project_factory("cpp11", "cpp11/simple_project", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "I am a cpp11 Object!!!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "I am a cpp11 Object!!!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_cpp11_features(self):
-        return_code, stdout, stderr = run_code_with_project_factory("cpp11",
-                                                                    "cpp11/cpp11_features.cpp", "empty_input.txt")
-        assert return_code == 0
+        result = run_code_with_project_factory("cpp11", "cpp11/cpp11_features.cpp", "empty_input.txt")
+        assert result.return_code == 0
 
 
 class TestJava7ProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("java7",
-                                                                    "java7/hello_world.java", "empty_input.txt")
+        result = run_code_with_project_factory("java7", "java7/hello_world.java", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_uses_java7_standard_library(self):
@@ -138,12 +126,12 @@ class TestJava7ProjectFactory(object):
             output_file_name = os.path.join(project_directory, "casos", "out0" + str(i) + ".txt")
 
             with open(input_file_name) as input_file:
-                return_code, stdout, stderr = project.run(input_file)
+                result = project.run(input_file)
 
             with open(output_file_name) as output_file:
                 output = output_file.read()
-                assert stdout == output
-                assert stderr == ""
+                assert result.stdout == output
+                assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_does_not_support_java8_features(self):
@@ -154,12 +142,11 @@ class TestJava7ProjectFactory(object):
 class TestJava8ProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("java8",
-                                                                    "java8/hello_world.java", "empty_input.txt")
+        result = run_code_with_project_factory("java8", "java8/hello_world.java", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_antlr_project(self):
@@ -175,29 +162,27 @@ class TestJava8ProjectFactory(object):
             output_file_name = os.path.join(project_directory, "casos", "out0" + str(i) + ".txt")
 
             with open(input_file_name) as input_file:
-                return_code, stdout, stderr = project.run(input_file)
+                result = project.run(input_file)
 
             with open(output_file_name) as output_file:
                 output = output_file.read()
-                assert stdout == output
-                assert stderr == ""
+                assert result.stdout == output
+                assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_java8_features(self):
-        return_code, stdout, stderr = run_code_with_project_factory("java8",
-                                                                    "java8/java8_features.java", "empty_input.txt")
-        assert return_code == 0
+        result = run_code_with_project_factory("java8", "java8/java8_features.java", "empty_input.txt")
+        assert result.return_code == 0
 
 
 class TestCProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("c",
-                                                                    "c/hello_world.c", "empty_input.txt")
+        result = run_code_with_project_factory("c", "c/hello_world.c", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.usefixtures("fake_sandbox")
     def test_does_not_support_c11_features(self):
@@ -208,16 +193,14 @@ class TestCProjectFactory(object):
 class TestC11ProjectFactory(object):
     @pytest.mark.usefixtures("fake_sandbox")
     def test_hello_world(self):
-        return_code, stdout, stderr = run_code_with_project_factory("c11",
-                                                                    "c11/hello_world.c", "empty_input.txt")
+        result = run_code_with_project_factory("c11", "c11/hello_world.c", "empty_input.txt")
 
-        assert return_code == 0
-        assert stdout == "Hello world!\n"
-        assert stderr == ""
+        assert result.return_code == 0
+        assert result.stdout == "Hello world!\n"
+        assert result.stderr == ""
 
     @pytest.mark.skip(reason="Container's GCC version does not fully support C11")
     @pytest.mark.usefixtures("fake_sandbox")
     def test_c11_features(self):
-        return_code, stdout, stderr = run_code_with_project_factory("c11",
-                                                                    "c11/c11_features.c", "empty_input.txt")
-        assert return_code == 0
+        result = run_code_with_project_factory("c11", "c11/c11_features.c", "empty_input.txt")
+        assert result.return_code == 0

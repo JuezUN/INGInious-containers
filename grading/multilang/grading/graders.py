@@ -67,30 +67,33 @@ def _compute_single_feedback(project, input_file_name, expected_output_file_name
     treat_non_zero_as_runtime_error = options.get("treat_non_zero_as_runtime_error", True)
 
     with open(input_file_name, 'r') as input_file:
-        return_code, stdout, stderr = project.run(input_file)
+        run_result = project.run(input_file)
 
     with open(expected_output_file_name) as expected_output_file:
         expected_output = expected_output_file.read()
 
-    if return_code == 0 or (not treat_non_zero_as_runtime_error and
-                            parse_non_zero_return_code(return_code) == GraderResult.RUNTIME_ERROR):
-        output_matches = check_output(stdout, expected_output)
+    if run_result.return_code == 0 or (not treat_non_zero_as_runtime_error and
+                            parse_non_zero_return_code(run_result.return_code) == GraderResult.RUNTIME_ERROR):
+        output_matches = check_output(run_result.stdout, expected_output)
         result = GraderResult.ACCEPTED if output_matches else GraderResult.WRONG_ANSWER
     else:
-        result = parse_non_zero_return_code(return_code)
+        result = parse_non_zero_return_code(run_result.return_code)
 
-    debug_info = {}
+    debug_info = {
+        "execution_time": run_result.execution_time,
+        "memory_usage": run_result.memory_usage
+    }
 
     if result != GraderResult.ACCEPTED:
         diff = None
         if compute_diff:
-            diff = _compute_diff(stdout, expected_output, diff_context_lines, diff_max_lines)
+            diff = _compute_diff(run_result.stdout, expected_output, diff_context_lines, diff_max_lines)
 
         debug_info.update({
             "input_file": input_file_name,
-            "stdout": html.escape(stdout),
-            "stderr": html.escape(stderr),
-            "return_code": return_code,
+            "stdout": html.escape(run_result.stdout),
+            "stderr": html.escape(run_result.stderr),
+            "return_code": run_result.return_code,
             "diff": None if diff is None else html.escape(diff),
         })
 
@@ -151,19 +154,19 @@ def run_against_custom_input(project, custom_input, feedback=feedback):
     with open(custom_input_file_name, 'r') as input_file:
         try:
             project.build()
-            return_code, stdout, stderr = project.run(input_file)
+            run_result = project.run(input_file)
 
-            if return_code == 0:
+            if run_result.return_code == 0:
                 result = GraderResult.ACCEPTED
                 feedback_str = "Your code finished successfully. Check your output below\n"
             else:
-                result = parse_non_zero_return_code(return_code)
+                result = parse_non_zero_return_code(run_result.return_code)
                 feedback_str = rst.get_html_block(
                     "Your code did not run successfully: <strong>%s</strong>" % (result.name,))
 
             # Save stdout and stderr so the UI can show it easily
-            feedback.set_custom_value("custom_stdout", stdout)
-            feedback.set_custom_value("custom_stderr", stderr)
+            feedback.set_custom_value("custom_stdout", run_result.stdout)
+            feedback.set_custom_value("custom_stderr", run_result.stderr)
         except projects.BuildError as e:
             compilation_output = e.compilation_output
             feedback_str = _generate_feedback_for_compilation_error(compilation_output)
@@ -256,9 +259,16 @@ def grade_with_partial_scores(project, test_cases, weights=None, options=None, f
                                    for i, result in enumerate(results))
 
     summary_result = _compute_summary_result(results)
+    total_execution_time = sum(item["execution_time"] for item in debug_info.get("files_feedback", {}).values()
+                               if item.get("execution_time", None) is not None)
+    max_memory_usage = max((item["memory_usage"] for item in debug_info.get("files_feedback", {}).values()
+                            if item.get("memory_usage", None) is not None),
+                           default=None)
 
     feedback.set_custom_value("additional_info", json.dumps(debug_info))
     feedback.set_custom_value("summary_result", summary_result.name)
+    feedback.set_custom_value("max_memory_usage", max_memory_usage)
+    feedback.set_custom_value("total_execution_time", total_execution_time)
     feedback.set_global_result("success" if passing == len(test_cases) else "failed")
     feedback.set_grade(score * 100.0 / total_sum)
     feedback.set_global_feedback(feedback_str)

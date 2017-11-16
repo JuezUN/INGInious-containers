@@ -9,34 +9,34 @@ from unittest import mock
 from grading.graders import grade_with_partial_scores, run_against_custom_input, generate_test_files_tuples
 from grading import graders
 from grading.projects import Project, BuildError
+from grading.projects.project import RunResult
 from grading.results import SandboxCodes, GraderResult
 
 
-def mock_project(return_code, stdout, stderr):
+def create_mock_project(run_result):
     mock = MagicMock()
-    mock.run = MagicMock(return_value=(return_code, stdout, stderr))
+    mock.run = MagicMock(return_value=run_result)
     return mock
 
 
 class FakeProject(Project):
-
     def _do_build(self):
         pass
 
     def run(self, input_file):
         file_content = input_file.read()
         if file_content == "TLE":
-            return SandboxCodes.TIME_LIMIT.value, "", ""
+            return RunResult(SandboxCodes.TIME_LIMIT.value, "", "")
         elif file_content == "MLE":
-            return SandboxCodes.MEMORY_LIMIT.value, "", ""
+            return RunResult(SandboxCodes.MEMORY_LIMIT.value, "", "")
         elif file_content == "CE":
             raise BuildError("The code did not compile")
         elif file_content == "RTE":
-            return 255, "", ""
+            return RunResult(255, "", "")
         elif file_content == "IE":
-            return SandboxCodes.INTERNAL_ERROR.value, "", ""
+            return RunResult(SandboxCodes.INTERNAL_ERROR.value, "", "")
         else:
-            return 0, "Accepted output", ""
+            return RunResult(0, "Accepted output", "")
 
 
 class TestGrader(object):
@@ -62,7 +62,7 @@ class TestGrader(object):
         stdout = "project_output"
         stderr = ""
 
-        project = mock_project(return_code, stdout, stderr)
+        project = create_mock_project(RunResult(return_code, stdout, stderr))
         run_against_custom_input(project, "some_input", feedback)
 
         feedback.set_global_result.assert_called_with("success")
@@ -77,7 +77,7 @@ class TestGrader(object):
         stdout = ""
         stderr = "Not enough memory :("
 
-        project = mock_project(return_code, stdout, stderr)
+        project = create_mock_project(RunResult(return_code, stdout, stderr))
         run_against_custom_input(project, "some_input", feedback)
 
         feedback.set_global_result.assert_called_with("failed")
@@ -236,8 +236,8 @@ class TestGrader(object):
         project = MagicMock()
 
         project.run.side_effect = [
-            (0, "Accepted output", ""),
-            (SandboxCodes.TIME_LIMIT.value, "Time limit output", "stderr example")
+            RunResult(0, "Accepted output", ""),
+            RunResult(SandboxCodes.TIME_LIMIT.value, "Time limit output", "stderr example")
         ]
 
         tests = ["AC.txt", "TLE.txt"]
@@ -252,14 +252,17 @@ class TestGrader(object):
 
         assert debug_info == {
             "files_feedback": {
-                # Empty for successful runs
-                full_path_test_cases[0][0]: {},
-                # input_file, stdout, stderr, return_code and diff for unsuccessful runs
+                full_path_test_cases[0][0]: {
+                    "memory_usage": None,
+                    "execution_time": None
+                },
                 full_path_test_cases[1][0]: {
                     "input_file": full_path_test_cases[1][0],
                     "stdout": "Time limit output",
                     "stderr": "stderr example",
                     "return_code": SandboxCodes.TIME_LIMIT.value,
+                    "memory_usage": None,
+                    "execution_time": None,
                     # Diff was disabled because there is no specific format for this.
                     "diff": None,
                 }
@@ -270,7 +273,7 @@ class TestGrader(object):
         runtime_error_code = 10
         feedback = MagicMock()
         expected_output = "Accepted output"
-        project = mock_project(runtime_error_code, expected_output, "")
+        project = create_mock_project(RunResult(runtime_error_code, expected_output, ""))
 
         tests = ["AC.txt"]
         full_path_test_cases = self.build_full_named_test_pairs(tests)
@@ -287,7 +290,7 @@ class TestGrader(object):
         runtime_error_code = 10
         feedback = MagicMock()
         wrong_output = "wrong output"
-        project = mock_project(runtime_error_code, wrong_output, "")
+        project = create_mock_project(RunResult(runtime_error_code, wrong_output, ""))
 
         tests = ["AC.txt"]
         full_path_test_cases = self.build_full_named_test_pairs(tests)
@@ -307,7 +310,7 @@ class TestGrader(object):
             return summary_result
 
         feedback = MagicMock()
-        project = mock_project(0, "", "")
+        project = create_mock_project(RunResult(0, "", ""))
 
         tests = ["AC.txt"]
         full_path_test_cases = self.build_full_named_test_pairs(tests)
@@ -315,7 +318,7 @@ class TestGrader(object):
         with mock.patch('grading.graders._compute_summary_result', compute_summary_result):
             grade_with_partial_scores(project, full_path_test_cases, feedback=feedback)
 
-        feedback.set_custom_value.assert_called_with("summary_result", summary_result.name)
+        feedback.set_custom_value.assert_any_call("summary_result", summary_result.name)
 
     @pytest.mark.parametrize("grader_results,expected_summary", [
         ([GraderResult.COMPILATION_ERROR, GraderResult.TIME_LIMIT_EXCEEDED,
@@ -335,3 +338,61 @@ class TestGrader(object):
     def test_compute_summary_feedback(self, grader_results, expected_summary):
         assert graders._compute_summary_result(grader_results) == expected_summary
         assert graders._compute_summary_result(grader_results[::-1]) == expected_summary
+
+    def test_grade_with_partial_scores_includes_memory_usage(self):
+        memory_usages = [1234567, 10000, 20000000, None]
+        custom_feedback = {}
+
+        def set_custom_value(key, value):
+            custom_feedback[key] = value
+
+        feedback = MagicMock()
+        feedback.set_custom_value.side_effect = set_custom_value
+
+        project = MagicMock()
+
+        project.run.side_effect = [
+            RunResult(0, "", "", memory_usage=memory_usage)
+            for memory_usage in memory_usages
+        ]
+
+        tests = ["AC.txt", "WA.txt", "MLE.txt", "RTE.txt"]
+        full_path_test_cases = self.build_full_named_test_pairs(tests)
+
+        grade_with_partial_scores(project, full_path_test_cases, feedback=feedback)
+
+        assert custom_feedback["max_memory_usage"] == 20000000
+
+        additional_info = json.loads(custom_feedback["additional_info"])
+
+        for i in range(len(tests)):
+            assert additional_info["files_feedback"][full_path_test_cases[i][0]]["memory_usage"] == memory_usages[i]
+
+    def test_grade_with_partial_scores_includes_execution_time(self):
+        execution_times = [1, 2, None]
+        custom_feedback = {}
+
+        def set_custom_value(key, value):
+            custom_feedback[key] = value
+
+        feedback = MagicMock()
+        feedback.set_custom_value.side_effect = set_custom_value
+
+        project = MagicMock()
+
+        project.run.side_effect = [
+            RunResult(0, "", "", execution_time=execution_time)
+            for execution_time in execution_times
+        ]
+
+        tests = ["AC.txt", "WA.txt", "MLE.txt"]
+        full_path_test_cases = self.build_full_named_test_pairs(tests)
+
+        grade_with_partial_scores(project, full_path_test_cases, feedback=feedback)
+
+        assert custom_feedback["total_execution_time"] == 3
+
+        additional_info = json.loads(custom_feedback["additional_info"])
+
+        for i in range(len(tests)):
+            assert additional_info["files_feedback"][full_path_test_cases[i][0]]["execution_time"] == execution_times[i]

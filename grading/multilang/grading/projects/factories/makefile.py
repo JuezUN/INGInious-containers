@@ -1,5 +1,6 @@
 from grading.projects.project import ProjectFactory, LambdaProject
 from grading.projects.errors import BuildError
+from grading.projects.factories.utils import _get_compilation_message_from_return_code
 from abc import ABCMeta
 
 
@@ -14,9 +15,10 @@ class MakefileProjectFactory(ProjectFactory, metaclass=ABCMeta):
     def create_from_directory(self, directory):
         def build():
             compilation_command = ["make"]
-            return_code, stdout, stderr = self._sandbox_runner.run_command(compilation_command, cwd=directory)
-            if return_code != 0:
-                raise BuildError(stderr)
+            compilation_result = self._sandbox_runner.run_command(compilation_command, cwd=directory)
+            if compilation_result.return_code != 0:
+                raise BuildError(_get_compilation_message_from_return_code(compilation_result.return_code) + "\n" +
+                                 compilation_result.stderr)
 
         def run(input_file):
             run_command = ["make", "run"]

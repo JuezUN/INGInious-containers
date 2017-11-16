@@ -57,9 +57,10 @@ class JavaProjectFactory(ProjectFactory):
 
             javac_command.extend(source_files)
 
-            return_code, stdout, stderr = self._sandbox_runner.run_command(javac_command, cwd=directory)
-            if return_code != 0:
-                raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
+            compilation_result = self._sandbox_runner.run_command(javac_command, cwd=directory)
+            if compilation_result.return_code != 0:
+                raise BuildError(_get_compilation_message_from_return_code(compilation_result.return_code) + "\n" +
+                                 compilation_result.stderr)
 
         def run(input_file):
             classpath_entries = ["build", self._classpath, self._classpath + "/*"]

@@ -31,9 +31,10 @@ class CProjectFactory(MakefileProjectFactory):
 
         def build():
             compilation_command = ["gcc", "main.c", "-o", "main"] + self._additional_flags
-            return_code, stdout, stderr = self._sandbox_runner.run_command(compilation_command, cwd=project_directory)
-            if return_code != 0:
-                raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
+            compilation_result = self._sandbox_runner.run_command(compilation_command, cwd=project_directory)
+            if compilation_result.return_code != 0:
+                raise BuildError(_get_compilation_message_from_return_code(compilation_result.return_code) + "\n" +
+                                 compilation_result.stderr)
 
         def run(input_file):
             run_command = ["./main"]

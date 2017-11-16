@@ -2,6 +2,25 @@ from abc import abstractmethod, ABCMeta
 from .errors import ProjectNotBuiltError
 
 
+class RunResult():
+    def __init__(self, return_code, stdout, stderr, execution_time=None, memory_usage=None):
+        """
+        Initializes this instance with the following information:
+
+        :param return_code: The return code of the process (0 for success)
+        :param stdout: A string with the standard output of the process
+        :param stderr: A string with the standard error output of the process
+        :param execution_time: The number of fractional seconds taken by the process to execute (or None if not
+         available)
+        :param memory_usage: The maximum amount of memory used by the process, in bytes (or None if not available)
+        """
+        self.return_code = return_code
+        self.stdout = stdout
+        self.stderr = stderr
+        self.execution_time = execution_time
+        self.memory_usage = memory_usage
+
+
 class Project(object, metaclass=ABCMeta):
     """
     Represents a runnable code project. Subclasses must take care of running the code using the
@@ -34,10 +53,7 @@ class Project(object, metaclass=ABCMeta):
     @abstractmethod
     def run(self, input_file):
         """
-        Executes this project with the given input file and returns a tuple of
-        (return_code, stdout, stderr), where return_code is the status code the process finished
-        with, and stdout and stderr are strings with the standard and the error output of the
-        program.
+        Executes this project with the given input file and returns an instance of RunResult.
 
         The project must be built before any call to this method, or a ProjectNotBuiltError will
         be thrown.

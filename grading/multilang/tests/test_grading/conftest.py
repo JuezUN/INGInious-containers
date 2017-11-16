@@ -2,6 +2,7 @@ import pytest
 import subprocess
 from grading.projects.factories import initialize_factories
 from grading.projects.factories.utils import SandboxRunner
+from grading.projects.project import RunResult
 
 
 @pytest.fixture
@@ -15,7 +16,7 @@ def fake_sandbox():
             stderr = completed_process.stderr.decode()
             return_code = completed_process.returncode
 
-            return return_code, stdout, stderr
+            return RunResult(return_code, stdout, stderr)
 
     initialize_factories(FakeSandboxRunner())
     yield None
