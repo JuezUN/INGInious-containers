@@ -1,6 +1,7 @@
 import subprocess
 import resource
 import time
+import os
 from grading.results import GraderResult, parse_non_zero_return_code
 from grading.projects.project import RunResult
 from abc import ABCMeta, abstractmethod
@@ -28,14 +29,14 @@ class InginiousSandboxRunner(SandboxRunner):
     """
     def run_command(self, command, **subprocess_options):
         initial_time = time.perf_counter()
-        completed_process = subprocess.run(["run_student"] + command, stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE, **subprocess_options)
+        process = subprocess.Popen(["run_student"] + command, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, **subprocess_options)
 
-        stdout = completed_process.stdout.decode()
-        stderr = completed_process.stderr.decode()
-        return_code = completed_process.returncode
+        _, return_code, resource_usage = os.wait4(process.pid, 0)
         execution_time = time.perf_counter() - initial_time
-        resource_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+
+        stdout = process.stdout.read().decode()
+        stderr = process.stderr.read().decode()
         memory_usage = resource_usage.ru_maxrss
 
         return RunResult(return_code=return_code, stdout=stdout, stderr=stderr, execution_time=execution_time,
