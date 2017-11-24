@@ -1,46 +1,10 @@
 import subprocess
-import time
-import psutil
-import os
+import json
 from grading.results import GraderResult, parse_non_zero_return_code
 from grading.projects.project import RunResult
 from abc import ABCMeta, abstractmethod
 
 CODE_WORKING_DIR = '/task/student/'
-
-
-class ProcessProfiler(object):
-    def profile(self, *subprocess_args, poll_interval=0.1, **subprocess_kwargs):
-        initial_time = time.perf_counter()
-        process = psutil.Popen(*subprocess_args, **subprocess_kwargs)
-        max_memory_usage = 0
-
-        while process.poll() is None:
-            memory_usage = self._poll_memory_usage(process)
-            max_memory_usage = max(max_memory_usage, memory_usage)
-            time.sleep(poll_interval)
-
-        execution_time = time.perf_counter() - initial_time
-
-        return process, execution_time, max_memory_usage
-
-    def _poll_memory_usage(self, process):
-        related_processes = process.children(recursive=True) + [process]
-
-        memory_usage = 0
-        for related_process in related_processes:
-            try:
-                memory_info = related_process.memory_full_info()
-                memory_usage += memory_info.uss
-
-            except psutil.NoSuchProcess:
-                # This is an expected race condition.
-                pass
-
-        return memory_usage
-
-
-
 
 class SandboxRunner(metaclass=ABCMeta):
     @abstractmethod
@@ -61,13 +25,28 @@ class InginiousSandboxRunner(SandboxRunner):
     Implementation of SandboxRunner that uses run_student as a sandbox.
     """
     def run_command(self, command, **subprocess_options):
-        profiler = ProcessProfiler()
-        process, execution_time, max_memory_usage = profiler.profile(
-            ["run_student"] + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_options)
+        execution_info_file = "/task/execution_info.json"
+        completed_process = subprocess.run(
+            ["run_student", "--execution-info-file", execution_info_file] + command, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, **subprocess_options)
 
-        stdout = process.stdout.read().decode()
-        stderr = process.stderr.read().decode()
-        return_code = process.returncode
+        stdout = completed_process.stdout.decode()
+        stderr = completed_process.stderr.decode()
+        return_code = completed_process.returncode
+
+        execution_time = None
+        max_memory_usage = None
+
+        try:
+            with open(execution_info_file, "r") as f:
+                execution_info = json.loads(f.read())
+                execution_time = execution_info["execution_time"]
+                max_memory_usage = execution_info["max_memory_usage"]
+        except IOError as e:
+            # If the file is not available, just ignore it. This might happen because the run_student process
+            # was killed before it finished.
+            print("Execution information could not be retrieved:", e)
+            pass
 
         return RunResult(return_code=return_code, stdout=stdout, stderr=stderr, execution_time=execution_time,
                          memory_usage=max_memory_usage)
