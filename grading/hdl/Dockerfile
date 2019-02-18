@@ -1,4 +1,4 @@
-FROM amicis/uncode-c-base
+FROM amicis/uncode-base
 LABEL org.inginious.grading.name="HDL"
 
 ADD     ghdl /ghdl
