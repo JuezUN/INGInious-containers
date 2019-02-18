@@ -68,7 +68,7 @@ class HDLGrader(BaseGrader):
         debug_info = {'files_feedback': {}}
         result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(expected_output_name, results)
         test_cases = [(testbench_file_name, expected_output_name)]
-        feedback_str = self.diff_tool.to_html_block(1, result , test_cases, debug_info)
+        feedback_str = self.diff_tool.to_html_block(0, result , test_cases, debug_info)
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)
         # Return the grade and feedback of the code
