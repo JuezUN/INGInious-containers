@@ -2,7 +2,7 @@
 
 # Inherit from the base container, which has all the needed scripts to launch tasks
 FROM    unjudge/uncode-c-base
-LABEL org.inginious.grading.name="multiple_languages"
+LABEL org.inginious.grading.name="Data Science"
 
 
 # Add gcc
