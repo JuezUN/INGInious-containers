@@ -11,7 +11,7 @@ RUN pip3.5 install --no-cache-dir --upgrade okpy
 
 RUN chown -R worker:worker /root
 
-RUN     yum clean all
+RUN yum clean all
 
 ADD . /INGInious
 RUN cp -R /INGInious/grading/.  /usr/lib/python3.5/site-packages/grading/

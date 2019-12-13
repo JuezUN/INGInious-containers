@@ -3,6 +3,7 @@ import tempfile
 import subprocess
 from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR
 
+
 def _run_in_sandbox(command, **subprocess_options):
     """
     Runs the given command with the given options and returns a tuple of
@@ -14,8 +15,7 @@ def _run_in_sandbox(command, **subprocess_options):
     subprocess_options -- Additional options sent to subprocess.run.
     """
 
-    completed_process = subprocess.run(command, stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE, **subprocess_options)
+    completed_process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_options)
 
     stdout = completed_process.stdout.decode()
     stderr = completed_process.stderr.decode()
