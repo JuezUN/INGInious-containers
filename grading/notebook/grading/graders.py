@@ -77,7 +77,8 @@ class NotebookGrader(BaseGrader):
             # Generate feedback string for tests
             feedbacklist = []
             for i, test_result in enumerate(tests_results):
-                feedbacklist.append(_result_to_html(i, test_result["result"], test_result["total"], weights[i]))
+                feedbacklist.append(
+                    _result_to_html(test_result["name"], test_result["result"], test_result["total"], weights[i]))
             feedback_str = '\n\n'.join(feedbacklist)
 
         feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
@@ -111,12 +112,12 @@ class NotebookGrader(BaseGrader):
                     test_name, test_filename, weights[i]))
 
                 debug_info["files_feedback"][test_name] = test_debug_info
-                tests_results.append({"result": grader_result, "total": test_total})
+                tests_results.append({"result": grader_result, "total": test_total, "name": test_name})
 
         except projects.BuildError as e:
             debug_info["compilation_output"] = e.compilation_output
 
-            tests_results = [{"result": GraderResult.COMPILATION_ERROR, "total": 0} for _ in tests]
+            tests_results = [{"result": GraderResult.COMPILATION_ERROR, "total": 0, "name": test[0]} for test in tests]
 
         return tests_results, debug_info
 

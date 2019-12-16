@@ -38,5 +38,5 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     return feedback_info
 
 
-def _result_to_html(test_id, result, total, weight):
-    return '- **Test %d: %s** - %0.2f / %0.2f' % (test_id + 1, result.name, total, weight)
+def _result_to_html(test_name, result, total, weight):
+    return '- **%s: %s** - %0.2f / %0.2f' % (test_name, result.name, total, weight)
