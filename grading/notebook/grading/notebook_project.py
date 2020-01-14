@@ -38,8 +38,6 @@ class NotebookProjectFactory(ProjectFactory):
             of the file where the code will be stored.
         """
 
-        # self._main_file_name = main_file_name
-        # self._python_binary = python_binary
         self._additional_flags = additional_flags if additional_flags is not None else []
 
     # This method does not apply for notebooks.

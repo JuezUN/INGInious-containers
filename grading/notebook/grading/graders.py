@@ -8,7 +8,10 @@ This Notebook grader uses the its base container's modules (uncode container).
 import json
 import subprocess
 import html
+from collections import OrderedDict
+
 import projects
+import re
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
@@ -78,7 +81,7 @@ class NotebookGrader(BaseGrader):
             feedbacklist = []
             for i, test_result in enumerate(tests_results):
                 feedbacklist.append(
-                    _result_to_html(test_result["name"], test_result["result"], test_result["total"], weights[i]))
+                    _result_to_html(i, test_result, weights[i]))
             feedback_str = '\n\n'.join(feedbacklist)
 
         feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
@@ -107,17 +110,23 @@ class NotebookGrader(BaseGrader):
 
             debug_info["files_feedback"] = {}
             for i, test in enumerate(tests):
-                test_name, test_filename = test
+                test_name, test_filename, total_cases = test
                 (grader_result, test_total), test_debug_info = self._run_single_test(project, (
-                    test_name, test_filename, weights[i]))
+                    test_name, test_filename, weights[i], total_cases))
 
                 debug_info["files_feedback"][test_name] = test_debug_info
-                tests_results.append({"result": grader_result, "total": test_total, "name": test_name})
+                tests_results.append({"result": grader_result, "total": test_total, "name": test_name,
+                                      "cases": test_debug_info["cases_info"]})
 
         except projects.BuildError as e:
             debug_info["compilation_output"] = e.compilation_output
 
-            tests_results = [{"result": GraderResult.COMPILATION_ERROR, "total": 0, "name": test[0]} for test in tests]
+            tests_results = [{
+                "result": GraderResult.COMPILATION_ERROR,
+                "total": 0,
+                "name": test[0],
+                "cases": OrderedDict()
+            } for test in tests]
 
         return tests_results, debug_info
 
@@ -133,20 +142,26 @@ class NotebookGrader(BaseGrader):
             The result of the execution of the student's source code in the specific test (i.e. RUNTIME_ERROR) with
             the total grade for the test and the debug information in the execution.
         """
-        test_name, test_filename, weight = test
+        test_name, test_filename, weight, total_cases = test
 
         return_code, stdout, stderr = project.run(test_filename)
         if self._is_test_case_timeout(stdout):
             return_code, stdout, stderr = project.run(test_filename)
 
         score = 0
+        cases_info = {}
         if return_code == 0:
             if self._is_test_case_timeout(stdout):
                 result = GraderResult.TIME_LIMIT_EXCEEDED
             else:
                 score = self._get_total_score_test_case(stdout)
-                if self.show_runtime_errors and self._is_test_case_runtime_error(stdout):
-                    result = GraderResult.RUNTIME_ERROR
+                is_runtime_error, found_professor_code_exception, cases_info = self._check_exception(stdout, test_name,
+                                                                                                     total_cases)
+                if self.show_runtime_errors and is_runtime_error:
+                    if found_professor_code_exception:
+                        result = GraderResult.INTERNAL_ERROR
+                    else:
+                        result = GraderResult.RUNTIME_ERROR
                 elif self._is_test_case_compilation_error(stdout):
                     result = GraderResult.COMPILATION_ERROR
                 elif score != weight:
@@ -161,15 +176,49 @@ class NotebookGrader(BaseGrader):
             "test_name": test_name,
             "stdout": html.escape(stdout),
             "stderr": html.escape(stderr),
-            "return_code": return_code
+            "return_code": return_code,
+            "cases_info": cases_info
         }
         return (result, score), debug_info
 
-    def _is_test_case_runtime_error(self, stdout):
-        # TODO: Return where the exception happened, whether in user's or professor's code
-        if "exception" in stdout or "NameError" in stdout:
-            return True
-        return False
+    def _check_exception(self, stdout, test_name, total_cases):
+        """
+        Check the stdout executed with exceptions. This also checks if the exception was thrown either on student's or
+        professor's code for testing.
+        In order to know whether the exception occurred in student's code, OK command separates each case with its
+        corresponding exception, when its a student's code exception, the error starts with:
+        `Traceback (most recent call last):` and following the next messages corresponding to the exception.
+        When its a professor's code exception, the message is thrown exception, for example, NameError, corresponding
+        to the python exceptions' name.
+        """
+        found_student_code_exception = False
+        found_professor_code_exception = False
+        is_runtime_error = False
+
+        lines = stdout.split('\n')
+        cases_info = OrderedDict()
+        for case in range(1, total_cases + 1):
+            case_error_str = "%s > Suite %d > Case 1" % (test_name, case)
+            if case_error_str not in stdout:
+                continue
+            case_error_str_end = "---------------------------------------------------------------------"
+            case_error_index_start = lines.index(case_error_str)
+            case_error_index_end = lines.index(case_error_str_end, case_error_index_start, len(lines))
+            case_lines = lines[case_error_index_start:case_error_index_end]
+            found_student_code_exception = False
+            for line in case_lines:
+                error_pattern = re.compile("[a-zA-Z]*Error.*")
+                if line.startswith('Traceback (most recent call last):'):
+                    is_runtime_error = True
+                    found_student_code_exception = True
+                elif error_pattern.match(line):
+                    # Look for the error that caused the student exception
+                    if found_student_code_exception:
+                        cases_info[str(case)] = line
+                    else:
+                        is_runtime_error = True
+                        found_professor_code_exception = True
+        return is_runtime_error, found_professor_code_exception, cases_info
 
     def _is_test_case_compilation_error(self, stdout):
         if "SyntaxError" in stdout:
