@@ -33,41 +33,58 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
 
     feedback_info['custom']['additional_info'] = json.dumps(debug_info)
     feedback_info['custom']['summary_result'] = summary_result.name
-    feedback_info['custom']['q01'] = debug_info["files_feedback"]["Question1"]["stdout"]
-    feedback_info['custom']['q02'] = debug_info["files_feedback"]["Test2"]["stdout"]
     feedback_info['global']['result'] = "success" if passing == len(tests) else "failed"
     feedback_info['grade'] = score * 100.0 / total_sum
 
     return feedback_info
 
 
-def _result_to_html(test_id, test_result, weight):
-    cases = test_result["cases"]
+def _result_to_html(test_id, test_result, weight, show_debug_info):
+    cases_debug_info = test_result["cases"]
 
     template_info = {
         "test_id": test_id + 1,
         "test_name": test_result["name"],
         "result_name": test_result["result"].name,
-        "panel_id": "collapseDiff" + str(test_id),
-        "block_id": "diffBlock" + str(test_id),
+        "panel_id": "collapseDebug" + str(test_id),
+        "block_id": "debugBlock" + str(test_id),
         "weight": weight,
         "total": test_result["total"],
     }
-    test_template_html = ["""<ul><li><strong>{test_name}: {result_name} - {total} / {weight} </strong>""",
-                          """<a class="btn btn-default btn-link btn-xs" role="button"
-                          data-toggle="collapse" href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">
-                          Expand test results
-                        </a><div class="collapse" id="{panel_id}">""",
-                          """- <strong>Case {case_id}:</strong> {case_error} <br>""",
-                          "</div>",
-                          "</li></ul>"]
-    result_html = test_template_html[0].format(**template_info)
-    if test_result["result"].name == "RUNTIME_ERROR" and cases:
-        result_html += test_template_html[1].format(**template_info)
-        for i, case in cases.items():
-            result_html += test_template_html[2].format(case_id=i, case_error=case)
-        result_html += test_template_html[3]
+    test_name_template_html = [
+        """<ul><li><strong>{test_name}: {result_name} - {total} / {weight} </strong>""",
+        "</li></ul>"
+    ]
+    test_results_template_html = [
+        """<a class="btn btn-default btn-link btn-xs" role="button"
+        data-toggle="collapse" href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">
+        Expand test results
+        </a><div class="collapse" id="{panel_id}">""",
+        "</div>"
+    ]
+    test_case_error_template_html = """- <strong>Case {case_id}:</strong> {case_error} <br>"""
+    test_case_wrong_answer_template_html = """- <strong>Case {case_id}:</strong> 
+        <a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" href="#{case_panel_id}" 
+        aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
+        <div class="collapse" id="{case_panel_id}"><div class="row"><strong>Executed code:</strong><pre>{case_code}</pre></div>
+        <br><div class="row"><strong>Output difference</strong><pre>{case_output_diff}</pre></div></div><br>"""
 
-    result_html += test_template_html[4]
+    result_html = test_name_template_html[0].format(**template_info)
+    test_result_name = test_result["result"].name
+    if test_result_name in ["RUNTIME_ERROR", "WRONG_ANSWER"] and cases_debug_info and show_debug_info:
+        result_html += test_results_template_html[0].format(**template_info)
+        for i, case_debug_info in cases_debug_info.items():
+            if case_debug_info["is_runtime_error"]:
+                result_html += test_case_error_template_html.format(case_id=i, case_error=case_debug_info["error"])
+            else:
+                case_data = {
+                    "case_id": i,
+                    "case_panel_id": "collapseDebugCase" + str(i),
+                    "case_code": case_debug_info["case_code"].replace("/n", "<br>"),
+                    "case_output_diff": case_debug_info["case_output_diff"].replace("/n", "<br>")
+                }
+                result_html += test_case_wrong_answer_template_html.format(**case_data)
+        result_html += test_results_template_html[1]
+    result_html += test_name_template_html[1]
 
     return html2rst(result_html)

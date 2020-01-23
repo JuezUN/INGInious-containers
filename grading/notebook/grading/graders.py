@@ -35,6 +35,7 @@ class NotebookGrader(BaseGrader):
         super(NotebookGrader, self).__init__(submission_request)
         self.filename = options.get("filename", "file.ipynb")
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
+        self.show_debug_info_for = set(options.get("show_debug_info_for", []))
 
     def create_project(self):
         """
@@ -80,8 +81,9 @@ class NotebookGrader(BaseGrader):
             # Generate feedback string for tests
             feedbacklist = []
             for i, test_result in enumerate(tests_results):
+                show_debug_info = i in self.show_debug_info_for
                 feedbacklist.append(
-                    _result_to_html(i, test_result, weights[i]))
+                    _result_to_html(i, test_result, weights[i], show_debug_info))
             feedback_str = '\n\n'.join(feedbacklist)
 
         feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
@@ -166,6 +168,7 @@ class NotebookGrader(BaseGrader):
                     result = GraderResult.COMPILATION_ERROR
                 elif score != weight:
                     result = GraderResult.WRONG_ANSWER
+                    cases_info.update(self._get_case_diff(stdout, test_name, total_cases))
                 else:
                     result = GraderResult.ACCEPTED
         else:
@@ -180,6 +183,41 @@ class NotebookGrader(BaseGrader):
             "cases_info": cases_info
         }
         return (result, score), debug_info
+
+    def _get_case_diff(self, stdout, test_name, total_cases):
+        lines = stdout.split('\n')
+        cases_info = OrderedDict()
+        for case in range(1, total_cases + 1):
+            case_error_str = "%s > Suite %d > Case 1" % (test_name, case)
+            if case_error_str not in stdout:
+                continue
+            case_error_str_end = "---------------------------------------------------------------------"
+            case_error_index_start = lines.index(case_error_str)
+            case_error_index_end = lines.index(case_error_str_end, case_error_index_start, len(lines))
+            case_lines = lines[case_error_index_start:case_error_index_end]
+            case_code = ""
+            case_output_diff = ""
+            case_wrong_answer_str = "# Error: expected"
+            if case_wrong_answer_str not in case_lines:
+                continue
+
+            student_code_import_str = "from %s import *" % self.filename.split('.')[0]
+            for line in case_lines:
+
+                if line.startswith('>>> ') and student_code_import_str != line[4:]:
+                    case_code += line[4:] + '/n'
+                elif line.startswith("# "):
+                    if line == case_wrong_answer_str:
+                        case_output_diff += "Expected/n"
+                    else:
+                        case_output_diff += line[2:] + '/n'
+
+            cases_info[str(case)] = {
+                "is_runtime_error": False,
+                "case_code": case_code,
+                "case_output_diff": case_output_diff
+            }
+        return cases_info
 
     def _check_exception(self, stdout, test_name, total_cases):
         """
@@ -211,10 +249,10 @@ class NotebookGrader(BaseGrader):
                 if line.startswith('Traceback (most recent call last):'):
                     is_runtime_error = True
                     found_student_code_exception = True
-                elif error_pattern.match(line):
+                elif error_pattern.match(line) or line == "Exception":
                     # Look for the error that caused the student exception
                     if found_student_code_exception:
-                        cases_info[str(case)] = line
+                        cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": line}
                     else:
                         is_runtime_error = True
                         found_professor_code_exception = True
