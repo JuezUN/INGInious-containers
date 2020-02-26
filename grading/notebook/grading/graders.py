@@ -53,7 +53,7 @@ class NotebookGrader(BaseGrader):
             with open(path, "wb") as project_file:
                 project_file.write(request.code)
 
-            # Extract the python code.
+            # Extract the python code within the same folder where the code is located.
             subprocess.run(["jupyter", "nbconvert", "--to", "script", "*.ipynb"])
             project = project_factory.create_from_directory('./')
             return project
@@ -93,8 +93,8 @@ class NotebookGrader(BaseGrader):
 
     def _run_all_tests(self, project, tests, weights):
         """
-        This method runs  all the OK tests and returns a list of Dicts containing
-        the results and total for each test and a dictionary containing information for debugging.
+        This method runs all the OK tests and returns a list of Dicts containing
+        the results, total for each test and a dictionary containing debugging information.
 
         Args:
             project (obj): An instance of Project (an abstraction of runnable code)
@@ -185,6 +185,14 @@ class NotebookGrader(BaseGrader):
         return (result, score), debug_info
 
     def _get_case_diff(self, stdout, test_name, total_cases):
+        """
+        Parses the output from OK grader for each case, getting the final result for each case, the code and
+        output diff
+        :param stdout: Output from OK grader
+        :param test_name:
+        :param total_cases: Total test cases the test has
+        :return: A Dict with the result, the executed code and the output diff
+        """
         lines = stdout.split('\n')
         cases_info = OrderedDict()
         for case in range(1, total_cases + 1):
