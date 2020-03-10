@@ -79,7 +79,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
             else:
                 case_data = {
                     "case_id": i,
-                    "case_panel_id": "collapseDebugCase" + str(i),
+                    "case_panel_id": "collapse_debug_test_%s_case_%s" % (str(test_id), str(i)),
                     "case_code": case_debug_info["case_code"].replace("/n", "<br>"),
                     "case_output_diff": case_debug_info["case_output_diff"].replace("/n", "<br>")
                 }
