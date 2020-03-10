@@ -294,8 +294,14 @@ class SimpleGrader(BaseGrader):
         """
         feedback_info = {'global': {}, 'custom': {}}
         compilation_output = error.compilation_output
-        feedback_info['global']['feedback'] = gutils.feedback_str_for_compilation_error(compilation_output)
-        feedback_info['global']['result'] = GraderResult.COMPILATION_ERROR
+        feedback_info['global']['return'] = GraderResult.COMPILATION_ERROR
+        feedback_info['global']['feedback'] = gutils.html_to_rst(
+            "Your code did not run successfully: <strong>%s</strong>, check the error below." %
+            feedback_info['global']['return'].name)
+        feedback_info['global']['result'] = "failed"
+        feedback_info['grade'] = 0.0
+        feedback_info['custom']['stdout'] = ""
+        feedback_info['custom']['stderr'] = compilation_output
 
         return feedback_info
 
