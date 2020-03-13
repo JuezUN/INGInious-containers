@@ -110,9 +110,9 @@ class HDLGrader(BaseGrader):
         # Return the grade and feedback of the code
 
     def _construct_feedback(self, results):
-        # Check return code of the result
-        stdout_golden, result = results
-        return_code, stdout, stderr = result
+        #results contains the std ouput of the simulation of the golden model which is the expected output, and the return_code, stdout and stderr of the simulation of the code in evaluation
+        stdout_golden, result_evaluation = results
+        return_code, stdout, stderr = result_evaluation
 
         feedback_info = {'global': {}, 'custom': {}}
         result = GraderResult.WRONG_ANSWER
@@ -189,10 +189,9 @@ class DiffWaveDrom(Diff):
             else:
                 diff_html = """<ul><li><strong>Test {0}: {1} </strong></li></ul>""".format(
                     test_id + 1, result.name)
-            # Embedding the html containing the diff into rst code.
-
+            # The function called is changed to updateWaveDromBlock where besides of the initial diff a timing diagram is shown
             diff_html = diff_html.replace("updateDiffBlock", "updateWaveDromBlock")
-
+            # Embedding the html containing the diff into rst code.
             htmlblock = html2rst(diff_html)
         else:
             htmlblock = '- **Test %d: %s**' % (test_id + 1, result.name)
