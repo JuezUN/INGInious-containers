@@ -344,7 +344,6 @@ class VerilogProjectFactory(ProjectFactory):
         
     def create_from_directory(self, directory):
         def build():
-            # source_files = glob(os.path.join(os.path.abspath(directory), "*"))
             golden_file = glob(os.path.join(os.path.abspath(directory), "*G.v"))
             testbench_file = glob(os.path.join(os.path.abspath(directory), "*T.v"))
             design_file = glob(os.path.join(os.path.abspath(directory), "*D.v"))
