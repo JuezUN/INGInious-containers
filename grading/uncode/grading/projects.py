@@ -368,7 +368,6 @@ class VerilogProjectFactory(ProjectFactory):
             run_command = ["vvp golden.out"]
             return_code_golden, stdout_golden, stderr_golden = _run_in_sandbox(run_command, cwd=directory)
 
-            print(stdout_golden)
             run_command = ["vvp main.out"]
             return stdout_golden, _run_in_sandbox(run_command, cwd=directory)
         
