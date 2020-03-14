@@ -344,18 +344,35 @@ class VerilogProjectFactory(ProjectFactory):
         
     def create_from_directory(self, directory):
         def build():
-            source_files = glob(os.path.join(os.path.abspath(directory), "*.v"))
+            golden_file = glob(os.path.join(os.path.abspath(directory), "*G.v"))
+            testbench_file = glob(os.path.join(os.path.abspath(directory), "*T.v"))
+            design_file = glob(os.path.join(os.path.abspath(directory), "*D.v"))
 
-            compilation_command = self._additional_flags + ["iverilog -o main.out"]
-            compilation_command.extend(source_files)
+            #Compile the testbench using the golden model
+            compilation_golden = ["iverilog -o golden.out"] + self._additional_flags
+            compilation_golden.extend(golden_file)
+            compilation_golden.extend(testbench_file)
+            return_code, stdout, stderr = _run_in_sandbox(compilation_golden, cwd=directory)
+            if return_code != 0:
+                raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-            return_code, stdout, stderr = _run_in_sandbox(compilation_command, cwd=directory)
+            #Compile the testbench using the student's code
+            compilation_code = ["iverilog -o code.out"] + self._additional_flags
+            compilation_code.extend(testbench_file)
+            compilation_code.extend(design_file)
+            return_code, stdout, stderr = _run_in_sandbox(compilation_code, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
         def run(input_file=None):
-            run_command = ["vvp main.out"]
-            return _run_in_sandbox(run_command, cwd=directory)
+            #Simulate using Icarus Verilog the testbench using the golden model
+            run_command = ["vvp golden.out"]
+            return_code_golden, stdout_golden, stderr_golden = _run_in_sandbox(run_command, cwd=directory)
+
+            #Simulate using Icarus Verilog the testbench using the student's code
+            run_command = ["vvp code.out"]
+            #Return the stdout of the simulation of the golden model and the run in sandbox of the simulation of the code in evalutation
+            return stdout_golden, _run_in_sandbox(run_command, cwd=directory)
         
         return LambdaProject(run_function=run, build_function=build)
 
