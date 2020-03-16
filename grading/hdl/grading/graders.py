@@ -43,7 +43,7 @@ class HDLGrader(BaseGrader):
                 testbench_temp_name = tempfile.mkstemp(suffix="T.v", dir=project_directory)[1]
                 golden_temp_name = tempfile.mkstemp(suffix="G.v", dir=project_directory)[1]
             elif language_name == 'vhdl':
-                code_file_name = tempfile.mkstemp(suffix="D.vhd", dir=project_directory)
+                code_file_name = tempfile.mkstemp(suffix="D.vhd", dir=project_directory)[1]
                 testbench_temp_name = os.path.join(project_directory, testbench_file_name)
 
             with open(code_file_name, "w+") as code_file:
