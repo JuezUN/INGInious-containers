@@ -349,7 +349,7 @@ class VerilogProjectFactory(ProjectFactory):
             design_file = glob(os.path.join(os.path.abspath(directory), "*D.v"))
 
             #Compile the testbench using the golden model
-            compilation_golden = ["iverilog -o golden.out"] + self._additional_flags
+            compilation_golden = ["iverilog", "-o", "golden.out"] + self._additional_flags
             compilation_golden.extend(golden_file)
             compilation_golden.extend(testbench_file)
             return_code, stdout, stderr = _run_in_sandbox(compilation_golden, cwd=directory)
@@ -357,7 +357,7 @@ class VerilogProjectFactory(ProjectFactory):
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
             #Compile the testbench using the student's code
-            compilation_code = ["iverilog -o code.out"] + self._additional_flags
+            compilation_code = ["iverilog", "-o", "code.out"] + self._additional_flags
             compilation_code.extend(testbench_file)
             compilation_code.extend(design_file)
             return_code, stdout, stderr = _run_in_sandbox(compilation_code, cwd=directory)
@@ -366,11 +366,11 @@ class VerilogProjectFactory(ProjectFactory):
 
         def run(input_file=None):
             #Simulate using Icarus Verilog the testbench using the golden model
-            run_command = ["vvp golden.out"]
+            run_command = ["vvp", "golden.out"]
             return_code_golden, stdout_golden, stderr_golden = _run_in_sandbox(run_command, cwd=directory)
 
             #Simulate using Icarus Verilog the testbench using the student's code
-            run_command = ["vvp code.out"]
+            run_command = ["vvp", "code.out"]
             #Return the stdout of the simulation of the golden model and the run in sandbox of the simulation of the code in evalutation
             return stdout_golden, _run_in_sandbox(run_command, cwd=directory)
         
@@ -385,11 +385,11 @@ class VHDLProjectFactory(ProjectFactory):
         def build():
             source_files = glob(os.path.join(os.path.abspath(directory), "*.vhd"))
             source_files = list(map(os.path.basename, source_files))
-            analyze_command = ["ghdl -a "] + source_files 
+            analyze_command = ["ghdl", "-a"] + source_files 
             return_code, stdout, stderr = _run_in_sandbox(analyze_command, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
-            compilation_command = ["ghdl -e ", entity_name]
+            compilation_command = ["ghdl", "-e", entity_name]
             return_code, stdout, stderr = _run_in_sandbox(compilation_command, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr+ str(analyze_command) + '\n' + str(compilation_command))
