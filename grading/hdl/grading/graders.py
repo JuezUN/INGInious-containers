@@ -4,10 +4,13 @@ import os
 import difflib
 import html
 import tempfile
+from glob import glob
+
 import projects
 from results import GraderResult, parse_non_zero_return_code
 from zipfile import ZipFile
 from base_grader import BaseGrader
+from graders_utils import html_to_rst as html2rst
 from feedback_tools import Diff, set_feedback
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
@@ -19,11 +22,11 @@ class HDLGrader(BaseGrader):
         super(HDLGrader, self).__init__(submission_request)
         self.generate_diff = options.get("compute_diff", True)
         self.treat_non_zero_as_runtime_error = options.get("treat_non_zero_as_runtime_error", True)
-        self.diff_tool = Diff(options)
+        self.diff_tool = DiffWaveDrom(options)
         self.check_output = options.get('check_output', gutils.check_output)
         self.entity_name = options.get('entity_name', 'testbench')        
 
-    def create_project(self, testbench_file_name):
+    def create_project(self, testbench_file_name, golden_file_name):
         """
         Creates a project (VHDL or Verilog) to test the code
         """
@@ -36,20 +39,22 @@ class HDLGrader(BaseGrader):
 
         if self.submission_request.problem_type == 'code_multiple_languages':            
             if language_name == 'verilog':
-                code_file_name = tempfile.mkstemp(suffix=".v", dir=project_directory)
-                testbench_temp_name = tempfile.mkstemp(suffix=".v", dir=project_directory)[1]
-            if language_name == 'vhdl':
-                code_file_name = tempfile.mkstemp(suffix=".vhd", dir=project_directory)
+                code_file_name = tempfile.mkstemp(suffix="D.v", dir=project_directory)[1]
+                testbench_temp_name = tempfile.mkstemp(suffix="T.v", dir=project_directory)[1]
+                golden_temp_name = tempfile.mkstemp(suffix="G.v", dir=project_directory)[1]
+            elif language_name == 'vhdl':
+                code_file_name = tempfile.mkstemp(suffix="D.vhd", dir=project_directory)[1]
                 testbench_temp_name = os.path.join(project_directory, testbench_file_name)
 
-            with open(code_file_name[1], "w+") as code_file:
+            with open(code_file_name, "w+") as code_file:
                 code_file.write(self.submission_request.code)
                 copyfile(testbench_file_name, testbench_temp_name)
+                copyfile(golden_file_name, golden_temp_name)
+
             if language_name == 'verilog':
                 return project_factory.create_from_directory(project_directory)
             elif language_name == 'vhdl':                
                 return project_factory.create_from_directory(project_directory, testbench_temp_name[1], self.entity_name)
-
 
         if self.submission_request.problem_type == 'code_file_multiple_languages':
             project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
@@ -62,7 +67,6 @@ class HDLGrader(BaseGrader):
             with ZipFile(project_directory + ".zip") as project_file:
                 project_file.extractall(path=project_directory)
 
-            
             if language_name == 'verilog':
                 # Add the testbench
                 testbench_temp_name = tempfile.mkstemp(suffix=".v", dir=project_directory)[1]
@@ -78,34 +82,48 @@ class HDLGrader(BaseGrader):
         Creates, Runs ands Test the code from the user. Finally setting the feedback
         variables.
         """
-        # Create the project
-        project = self.create_project(testbench_file_name)
-        # Run the project
-        project.build()
-        results = project.run(None)
+
         debug_info = {'files_feedback': {}}
-        result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(expected_output_name, results)
-        test_cases = (testbench_file_name, expected_output_name)
-        feedback_str = self.diff_tool.to_html_block(0, result , test_cases, debug_info)
+        # Create the project
+        project = self.create_project(testbench_file_name, expected_output_name)
+        # Run the project
+        try:
+            project.build()
+        except projects.BuildError as e:
+            debug_info["compilation_output"] = e.compilation_output
+
+        if "compilation_output" in debug_info:
+            feedback_info = {'global': {}, 'custom': {}}
+            feedback_info['global']['result'] = "failed"
+            feedback_info['grade'] = 0.0
+            compilation_output = debug_info.get("compilation_output", "")
+            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
+        else:
+            results = project.run(None)
+
+            result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(results)
+            test_cases = (testbench_file_name, expected_output_name)
+            feedback_str = self.diff_tool.to_html_block(0, result, test_cases, debug_info)
+
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)
         # Return the grade and feedback of the code
 
-    def _construct_feedback(self, expected_output_name, results):
-        # Check return code of the result
-        return_code, stdout, stderr = results        
+    def _construct_feedback(self, results):
+        #results contains the std ouput of the simulation of the golden model which is the expected output, and the return_code, stdout and stderr of the simulation of the code in evaluation
+        stdout_golden, result_evaluation = results
+        return_code, stdout, stderr = result_evaluation
 
         feedback_info = {'global': {}, 'custom': {}}
         result = GraderResult.WRONG_ANSWER
         if return_code == 0:
-            with open(expected_output_name, "r") as expected_output_file:
-                expected_output = expected_output_file.read()
-                correct = self.check_output(stdout, expected_output)
-                feedback_info['global']['result'] = "success" if correct else "failed"
-                feedback_info['grade'] = 100.0 if correct else 0.0
-                if correct: 
-                    result = GraderResult.ACCEPTED
-        
+            expected_output = stdout_golden
+            correct = self.check_output(stdout, expected_output)
+            feedback_info['global']['result'] = "success" if correct else "failed"
+            feedback_info['grade'] = 100.0 if correct else 0.0
+            if correct:
+                result = GraderResult.ACCEPTED
+
         debug_info = {}
 
         if result != GraderResult.ACCEPTED:
@@ -127,3 +145,58 @@ def handle_problem_action(problem_id, testbench, output, options=None):
     sub_req = SubmissionRequest(problem_id)
     grader = HDLGrader(sub_req, options)
     grader.grade(testbench, output)
+
+
+class DiffWaveDrom(Diff):
+    def to_html_block(self, test_id, result, test_case, debug_info):
+        """
+        This method creates a html block (rst embedding html) for a single test case.
+        Args:
+            - test_id (int):
+            - result: Represents the results for the feedback (check 'results.py')
+            - test_case (tuple): A pair of names. The input filename and the expected output filename
+            - debug_info (dict): Debugging information about the execution of the source code.
+        Returns:
+            An string representing the html block to be presented in the feedback about
+            a single test case.
+        """
+        input_filename = test_case[0]
+        if input_filename in self.output_diff_for:
+            diff_result = (
+                debug_info.get("files_feedback", {}).get(input_filename, {}).get("diff", None)
+            )
+
+            diff_available = diff_result is not None
+            diff_html = ""
+
+            if diff_available:
+                input_text_full, input_text = self.read_input_example(test_case)
+                template_info = {
+                    "test_id": test_id + 1,
+                    "result_name": result.name,
+                    "panel_id": "collapseDiff" + str(test_id),
+                    "block_id": "diffBlock" + str(test_id),
+                    "diff_result": diff_result.replace("\n", "\\n"),
+                    "input_text": input_text,
+                    "input_text_full": input_text_full,
+                    "title_input": test_case[0]
+                }
+
+                if self.show_input or input_text_full == "":
+                    diff_html = "".join(self.testcase_template).format(**template_info)
+                else:
+                    diff_html = "".join([self.testcase_template[0], self.testcase_template[2]]).format(**template_info)
+            else:
+                diff_html = """<ul><li><strong>Test {0}: {1} </strong></li></ul>""".format(
+                    test_id + 1, result.name)
+            # The function called is changed to updateWaveDromBlock where besides of the initial diff a timing diagram is shown
+            diff_html = diff_html.replace("updateDiffBlock", "updateWaveDromBlock")
+            # Embedding the html containing the diff into rst code.
+            htmlblock = html2rst(diff_html)
+        else:
+            htmlblock = '- **Test %d: %s**' % (test_id + 1, result.name)
+
+
+        return htmlblock
+
+

@@ -1,5 +1,5 @@
-FROM amicis/uncode-base
-LABEL org.inginious.grading.name="HDL"
+FROM    unjudge/uncode-c-base
+LABEL   org.inginious.grading.name="HDL"
 
 COPY    ghdl-0.36.tar.gz /ghdl-0.36.tar.gz
 RUN     tar -xvf ghdl-0.36.tar.gz && mv ghdl-0.36 ghdl
