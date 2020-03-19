@@ -53,6 +53,11 @@ class NotebookGrader(BaseGrader):
                 project_file.write(request.code)
 
             self._convert_nb_to_python_script(notebook_filepath)
+            files = subprocess.run(["ls"], cwd="/task/", stdout=subprocess.PIPE).stdout.decode("utf-8").split('\n')
+            for file in files:
+                if file and file not in ["run", "task.yaml", notebook_filepath, "student"]:
+                    subprocess.run(["cp", "-r", file, "/task/student/"], cwd="/task/")
+            print(subprocess.run(["ls"], cwd="/task/student/", stdout=subprocess.PIPE).stdout)
             project = project_factory.create_from_directory()
             return project
 
@@ -65,7 +70,7 @@ class NotebookGrader(BaseGrader):
         python_script_path = "{}.py".format(self.filename)
         accepted_lines = ["import subprocess\n"]
         get_ipython_pattern = r"get_ipython\(\)"
-        install_module_pattern = r"get_ipython\(\)\.system\(\'pip install.*"
+        install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
         shell_command_pattern = r"get_ipython\(\)\.system\(\'(.+?)\'\)"
         comment_line_pattern = r"#.*"
         with open(python_script_path, "r") as python_script:
@@ -156,7 +161,7 @@ class NotebookGrader(BaseGrader):
 
             tests_results = [{
                 "result": GraderResult.COMPILATION_ERROR,
-                "total": 0,
+                "total": 0.0,
                 "name": test[0],
                 "cases": OrderedDict()
             } for test in tests]
@@ -181,7 +186,7 @@ class NotebookGrader(BaseGrader):
         if self._is_test_case_timeout(stdout):
             return_code, stdout, stderr = project.run(test_filename)
 
-        score = 0
+        score = 0.0
         cases_info = {}
         if return_code == 0:
             if self._is_test_case_timeout(stdout):

@@ -15,7 +15,7 @@ def _run_in_sandbox(command, **subprocess_options):
     subprocess_options -- Additional options sent to subprocess.run.
     """
 
-    completed_process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_options)
+    completed_process = subprocess.run(["run_student"] + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_options)
 
     stdout = completed_process.stdout.decode()
     stderr = completed_process.stderr.decode()
@@ -48,7 +48,7 @@ class NotebookProjectFactory(ProjectFactory):
         def run(input_file):
             command = ["ok", "--local", "--score"] + ["-q", input_file] + self._additional_flags
 
-            return _run_in_sandbox(command)
+            return _run_in_sandbox(command, cwd="student/")
 
         return LambdaProject(run_function=run)
 

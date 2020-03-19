@@ -49,7 +49,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         "panel_id": "collapseDebug" + str(test_id),
         "block_id": "debugBlock" + str(test_id),
         "weight": weight,
-        "total": test_result["total"],
+        "total": "%.2f" % test_result["total"],
     }
     test_name_template_html = [
         """<ul><li><strong>{test_name}: {result_name} - {total} / {weight} </strong>""",
