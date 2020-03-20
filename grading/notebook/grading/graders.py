@@ -57,7 +57,6 @@ class NotebookGrader(BaseGrader):
             for file in files:
                 if file and file not in ["run", "task.yaml", notebook_filepath, "student"]:
                     subprocess.run(["cp", "-r", file, "/task/student/"], cwd="/task/")
-            print(subprocess.run(["ls"], cwd="/task/student/", stdout=subprocess.PIPE).stdout)
             project = project_factory.create_from_directory()
             return project
 
