@@ -284,12 +284,13 @@ class SimpleGrader(BaseGrader):
             return stderr
         stderr = stderr.split('\n')
         start_exception_regex = r".*Socket.__del__ of <zmq.sugar.socket.Socket.*"
-        end_exception_regex = r"AttributeError: 'NoneType' object has no attribute 'ref'"
-        start_exception_index = [i for i, line in enumerate(stderr) if re.match(start_exception_regex, line)][0]
-        end_exception_index = [i for i, line in enumerate(stderr) if re.match(end_exception_regex, line)][0]
+        start_exception_index = [i for i, line in enumerate(stderr) if re.match(start_exception_regex, line)]
+
+        if not start_exception_index:
+            return "\n".join(stderr)
 
         return "\n".join(
-            [line for i, line in enumerate(stderr) if i < start_exception_index or i > end_exception_index])
+            [line for i, line in enumerate(stderr) if i < start_exception_index[0]])
 
     def _construct_compilation_error_feedback_info(self, error):
         """
