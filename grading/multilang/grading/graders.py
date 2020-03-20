@@ -284,13 +284,16 @@ class SimpleGrader(BaseGrader):
             return stderr
         stderr = stderr.split('\n')
         start_exception_regex = r".*Socket.__del__ of <zmq.sugar.socket.Socket.*"
-        start_exception_index = [i for i, line in enumerate(stderr) if re.match(start_exception_regex, line)]
+        start_exception_index = None
+        for i, line in enumerate(stderr):
+            if re.match(start_exception_regex, line):
+                start_exception_index = i
+                break
 
         if not start_exception_index:
             return "\n".join(stderr)
 
-        return "\n".join(
-            [line for i, line in enumerate(stderr) if i < start_exception_index[0]])
+        return "\n".join([line for i, line in enumerate(stderr) if i < start_exception_index])
 
     def _construct_compilation_error_feedback_info(self, error):
         """
