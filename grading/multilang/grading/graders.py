@@ -265,7 +265,7 @@ class SimpleGrader(BaseGrader):
 
         if return_code == 0:
             feedback_info['global']['return'] = GraderResult.ACCEPTED
-            feedback_info['global']['feedback'] = "Your code finished successfully. Check your output below\n"
+            feedback_info['global']['feedback'] = gutils.html_to_rst("Your code finished successfully. Check your output below\n")
         else:
             feedback_info['global']['return'] = parse_non_zero_return_code(return_code)
             feedback_info['global']['feedback'] = gutils.html_to_rst(
@@ -283,15 +283,12 @@ class SimpleGrader(BaseGrader):
         if not stderr:
             return stderr
         stderr = stderr.split('\n')
-        start_exception_regex = r".*Socket.__del__ of <zmq.sugar.socket.Socket.*"
-        start_exception_index = None
+        start_exception_regex = r"Exception ignored in: <bound method Socket\.__del__ of <zmq\.sugar\.socket\.Socket.*"
+        start_exception_index = len(stderr)
         for i, line in enumerate(stderr):
             if re.match(start_exception_regex, line):
                 start_exception_index = i
                 break
-
-        if not start_exception_index:
-            return "\n".join(stderr)
 
         return "\n".join([line for i, line in enumerate(stderr) if i < start_exception_index])
 
