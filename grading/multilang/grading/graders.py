@@ -5,13 +5,12 @@ the submission requests.
 This module works with the help of the libraries on its base container (uncode).
 """
 
-from abc import ABC, abstractmethod
-from inginious import input, feedback
 import json
-import difflib
 import html
 import tempfile
 import projects
+import re
+
 from results import GraderResult, parse_non_zero_return_code
 from zipfile import ZipFile
 from base_grader import BaseGrader
@@ -86,11 +85,11 @@ class SimpleGrader(BaseGrader):
             feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
         else:
             # Generate feedback string for tests
-            feedbacklist = []
+            feedback_list = []
             for i, result in enumerate(results):
                 test_case = test_cases[i]
-                feedbacklist.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
-            feedback_str = '\n\n'.join(feedbacklist)
+                feedback_list.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
+            feedback_str = '\n\n'.join(feedback_list)
 
         feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
         feedback_info['global']['feedback'] = feedback_str
@@ -248,7 +247,6 @@ class SimpleGrader(BaseGrader):
             except:
                 raise
 
-
     def _generate_custom_input_feedback_info(self, return_code, stdout, stderr):
         """
         This method generates a dictionary with the information for setting the 
@@ -267,19 +265,32 @@ class SimpleGrader(BaseGrader):
 
         if return_code == 0:
             feedback_info['global']['return'] = GraderResult.ACCEPTED
-            feedback_info['global']['feedback'] = "Your code finished successfully. Check your output below\n"
+            feedback_info['global']['feedback'] = gutils.html_to_rst("Your code finished successfully. Check your output below\n")
         else:
             feedback_info['global']['return'] = parse_non_zero_return_code(return_code)
             feedback_info['global']['feedback'] = gutils.html_to_rst(
-                    "Your code did not run successfully: <strong>%s</strong>" % (feedback_info['global']['return'].name,))
-        feedback_info['custom']['stdout'] =  stdout
-        feedback_info['custom']['stderr'] = stderr
+                "Your code did not run successfully: <strong>%s</strong>" % (feedback_info['global']['return'].name,))
+        feedback_info['custom']['stdout'] = stdout
+        feedback_info['custom']['stderr'] = self._remove_sockets_exception(stderr)
 
-        feedback_info['global']['result'] = "success" if feedback_info['global']['return'] == GraderResult.ACCEPTED else "failed"
+        feedback_info['global']['result'] = "success" if feedback_info['global'][
+                                                             'return'] == GraderResult.ACCEPTED else "failed"
         feedback_info['grade'] = 100.0 if feedback_info['global']['return'] == GraderResult.ACCEPTED else 0.0
 
         return feedback_info
 
+    def _remove_sockets_exception(self, stderr):
+        if not stderr:
+            return stderr
+        stderr = stderr.split('\n')
+        start_exception_regex = r"Exception ignored in: <bound method Socket\.__del__ of <zmq\.sugar\.socket\.Socket.*"
+        start_exception_index = len(stderr)
+        for i, line in enumerate(stderr):
+            if re.match(start_exception_regex, line):
+                start_exception_index = i
+                break
+
+        return "\n".join([line for i, line in enumerate(stderr) if i < start_exception_index])
 
     def _construct_compilation_error_feedback_info(self, error):
         """
