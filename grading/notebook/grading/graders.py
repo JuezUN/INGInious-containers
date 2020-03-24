@@ -5,13 +5,12 @@ the submission requests.
 This Notebook grader uses the its base container's modules (uncode container).
 """
 
-import json
 import subprocess
 import html
 from collections import OrderedDict
+import re
 
 import projects
-import re
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
@@ -33,7 +32,7 @@ class NotebookGrader(BaseGrader):
 
     def __init__(self, submission_request, options):
         super(NotebookGrader, self).__init__(submission_request)
-        self.filename = options.get("filename", "file.ipynb")
+        self.filename = options.get("filename", "notebook")
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
         self.show_debug_info_for = set(options.get("show_debug_info_for", []))
 
@@ -49,16 +48,56 @@ class NotebookGrader(BaseGrader):
         project_factory = get_notebook_factory()
 
         if request.problem_type == 'notebook_file':
-            path = self.filename
-            with open(path, "wb") as project_file:
+            notebook_filepath = "{}.ipynb".format(self.filename)
+            with open(notebook_filepath, "wb") as project_file:
                 project_file.write(request.code)
 
-            # Extract the python code within the same folder where the code is located.
-            subprocess.run(["jupyter", "nbconvert", "--to", "script", "*.ipynb"])
-            project = project_factory.create_from_directory('./')
+            self._convert_nb_to_python_script(notebook_filepath)
+            self._copy_files_to_stundent_dir(notebook_filepath)
+            project = project_factory.create_from_directory()
             return project
 
         return None
+
+    def _copy_files_to_student_dir(self, notebook_filepath):
+        files = subprocess.run(["ls"], cwd="/task/", stdout=subprocess.PIPE).stdout.decode("utf-8").split('\n')
+        no_copy_files = ["run", "task.yaml", notebook_filepath, "student"]
+        for file in files:
+            if file and file not in no_copy_files:
+                subprocess.run(["cp", "-r", file, "/task/student/"], cwd="/task/")
+
+    def _convert_nb_to_python_script(self, notebook_path):
+        # Extract the python code within the same folder where the code is located.
+        subprocess.run(
+            ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True"])
+        python_script_path = "{}.py".format(self.filename)
+        accepted_lines = ["import subprocess\n"]
+        get_ipython_pattern = r"get_ipython\(\)"
+        install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
+        shell_command_pattern = r"get_ipython\(\)\.system\(\'(.+?)\'\)"
+        comment_line_pattern = r"#.*"
+        with open(python_script_path, "r") as python_script:
+            lines = python_script.readlines()
+            for line in lines:
+                strip_line = line.strip()
+                if re.match(shell_command_pattern, strip_line) and not re.match(install_module_pattern, strip_line):
+                    try:
+                        shell_command = re.search(shell_command_pattern, strip_line).group(1).split()
+                        new_line = "call = subprocess.run({}, stdout=subprocess.PIPE)\n".format(shell_command)
+                        accepted_lines.append(new_line)
+                        new_line = "print(call.stdout.decode('utf-8'))\n"
+                        accepted_lines.append(new_line)
+                    except Exception:
+                        pass
+                    continue
+                elif re.match(get_ipython_pattern, strip_line) or re.match(comment_line_pattern,
+                                                                           strip_line) or not strip_line:
+                    continue
+
+                accepted_lines.append(line)
+
+        with open(python_script_path, "w") as python_script:
+            python_script.write(''.join(accepted_lines))
 
     def grade(self, tests, weights=None):
         """
@@ -125,7 +164,7 @@ class NotebookGrader(BaseGrader):
 
             tests_results = [{
                 "result": GraderResult.COMPILATION_ERROR,
-                "total": 0,
+                "total": 0.0,
                 "name": test[0],
                 "cases": OrderedDict()
             } for test in tests]
@@ -150,7 +189,7 @@ class NotebookGrader(BaseGrader):
         if self._is_test_case_timeout(stdout):
             return_code, stdout, stderr = project.run(test_filename)
 
-        score = 0
+        score = 0.0
         cases_info = {}
         if return_code == 0:
             if self._is_test_case_timeout(stdout):
@@ -209,7 +248,7 @@ class NotebookGrader(BaseGrader):
             if case_wrong_answer_str not in case_lines:
                 continue
 
-            student_code_import_str = "from %s import *" % self.filename.split('.')[0]
+            student_code_import_str = "from %s import *" % self.filename
             for line in case_lines:
 
                 if line.startswith('>>> ') and student_code_import_str != line[4:]:
