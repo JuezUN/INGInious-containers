@@ -8,9 +8,9 @@ This Notebook grader uses the its base container's modules (uncode container).
 import subprocess
 import html
 from collections import OrderedDict
+import re
 
 import projects
-import re
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
@@ -53,14 +53,18 @@ class NotebookGrader(BaseGrader):
                 project_file.write(request.code)
 
             self._convert_nb_to_python_script(notebook_filepath)
-            files = subprocess.run(["ls"], cwd="/task/", stdout=subprocess.PIPE).stdout.decode("utf-8").split('\n')
-            for file in files:
-                if file and file not in ["run", "task.yaml", notebook_filepath, "student"]:
-                    subprocess.run(["cp", "-r", file, "/task/student/"], cwd="/task/")
+            self._copy_files_to_stundent_dir(notebook_filepath)
             project = project_factory.create_from_directory()
             return project
 
         return None
+
+    def _copy_files_to_student_dir(self, notebook_filepath):
+        files = subprocess.run(["ls"], cwd="/task/", stdout=subprocess.PIPE).stdout.decode("utf-8").split('\n')
+        no_copy_files = ["run", "task.yaml", notebook_filepath, "student"]
+        for file in files:
+            if file and file not in no_copy_files:
+                subprocess.run(["cp", "-r", file, "/task/student/"], cwd="/task/")
 
     def _convert_nb_to_python_script(self, notebook_path):
         # Extract the python code within the same folder where the code is located.
