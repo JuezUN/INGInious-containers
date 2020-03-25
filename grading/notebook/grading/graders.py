@@ -53,7 +53,7 @@ class NotebookGrader(BaseGrader):
                 project_file.write(request.code)
 
             self._convert_nb_to_python_script(notebook_filepath)
-            self._copy_files_to_stundent_dir(notebook_filepath)
+            self._copy_files_to_student_dir(notebook_filepath)
             project = project_factory.create_from_directory()
             return project
 

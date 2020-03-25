@@ -4,7 +4,7 @@ FROM    unjudge/uncode-c-base
 LABEL org.inginious.grading.name="Notebook"
 
 # Add python modules and OK grading module
-RUN pip3.5 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience plotly cufflinks bokeh
+RUN pip3.5 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience plotly cufflinks bokeh tabulate nltk
 RUN pip3.5 install --no-cache-dir --upgrade okpy
 
 RUN chown -R worker:worker /root
