@@ -305,6 +305,7 @@ class NotebookGrader(BaseGrader):
                     else:
                         is_runtime_error = True
                         found_professor_code_exception = True
+                        cases_info[str(case)] = {"is_internal_error": True, "error": line}
         return is_runtime_error, found_professor_code_exception, cases_info
 
     def _is_test_case_timeout(self, stdout):
