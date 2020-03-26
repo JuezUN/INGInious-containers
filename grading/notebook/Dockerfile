@@ -7,6 +7,8 @@ LABEL org.inginious.grading.name="Notebook"
 RUN pip3.5 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience plotly cufflinks bokeh tabulate nltk
 RUN pip3.5 install --no-cache-dir --upgrade okpy
 
+RUN python3 -m nltk.downloader -d /usr/local/share/nltk_data all
+
 RUN chown -R worker:worker /root
 
 RUN yum clean all
