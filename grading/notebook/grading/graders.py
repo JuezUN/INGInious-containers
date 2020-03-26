@@ -198,13 +198,11 @@ class NotebookGrader(BaseGrader):
                 score = self._get_total_score_test_case(stdout)
                 is_runtime_error, found_professor_code_exception, cases_info = self._check_exception(stdout, test_name,
                                                                                                      total_cases)
-                if self.show_runtime_errors and is_runtime_error:
+                if is_runtime_error:
                     if found_professor_code_exception:
                         result = GraderResult.INTERNAL_ERROR
                     else:
                         result = GraderResult.RUNTIME_ERROR
-                elif self._is_test_case_compilation_error(stdout):
-                    result = GraderResult.COMPILATION_ERROR
                 elif score != weight:
                     result = GraderResult.WRONG_ANSWER
                     cases_info.update(self._get_case_diff(stdout, test_name, total_cases))
@@ -212,6 +210,10 @@ class NotebookGrader(BaseGrader):
                     result = GraderResult.ACCEPTED
         else:
             result = parse_non_zero_return_code(return_code)
+
+        # In case show_runtime_errors is not checked, show the other errors as WRONG_ANSWER
+        if not self.show_runtime_errors and result not in [GraderResult.ACCEPTED, GraderResult.WRONG_ANSWER]:
+            result = GraderResult.WRONG_ANSWER
 
         debug_info = {
             "test_filename": test_filename,
@@ -304,11 +306,6 @@ class NotebookGrader(BaseGrader):
                         is_runtime_error = True
                         found_professor_code_exception = True
         return is_runtime_error, found_professor_code_exception, cases_info
-
-    def _is_test_case_compilation_error(self, stdout):
-        if "SyntaxError" in stdout:
-            return True
-        return False
 
     def _is_test_case_timeout(self, stdout):
         str_to_check = "# Error: evaluation exceeded"

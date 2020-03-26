@@ -85,6 +85,9 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
                 }
                 result_html += test_case_wrong_answer_template_html.format(**case_data)
         result_html += test_results_template_html[1]
+    elif test_result_name == "INTERNAL_ERROR":
+        result_html += "<br>This error might be related to a runtime error in the grading side code. Please check " \
+                       "with your professor for more information."
     result_html += test_name_template_html[1]
 
     return html2rst(result_html)
