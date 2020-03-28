@@ -31,8 +31,17 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
 
     summary_result = gutils.compute_summary_result(results)
 
+    internal_errors = []
+    for test_feedback in debug_info["files_feedback"].values():
+        cases_errors = ["\t- Case {}: {}".format(i, case["error"]) for i, case in test_feedback["cases_info"].items() if
+                        "is_internal_error" in case]
+        if cases_errors:
+            internal_error = [test_feedback["test_name"]] + cases_errors
+            internal_errors.append("\n".join(internal_error))
+
     feedback_info['custom']['additional_info'] = json.dumps(debug_info)
     feedback_info['custom']['summary_result'] = summary_result.name
+    feedback_info['custom']['internal_error'] = "\n".join(internal_errors)
     feedback_info['global']['result'] = "success" if passing == len(tests) else "failed"
     feedback_info['grade'] = score * 100.0 / total_sum
 
@@ -85,6 +94,9 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
                 }
                 result_html += test_case_wrong_answer_template_html.format(**case_data)
         result_html += test_results_template_html[1]
+    elif test_result_name == "INTERNAL_ERROR":
+        result_html += "<br>This error might be related to a runtime error in the grading side code. Please check " \
+                       "with your professor for more information."
     result_html += test_name_template_html[1]
 
     return html2rst(result_html)
