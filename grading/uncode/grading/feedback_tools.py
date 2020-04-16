@@ -46,19 +46,17 @@ class Diff:
         self.show_input = options.get('show_input', False)
 
         self.testcase_template = ["""<ul><li><strong>Test {test_id}: {result_name} </strong>
-                        <a class="btn btn-default btn-link btn-xs" role="button"
-                        data-toggle="collapse" href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">
-                        Toggle diff
-                    </a>
-                    <div class="collapse" id="{panel_id}">""",
-                    """
-                    <p>Input preview: {title_input}</p>
-                    <pre class="input-area" id="{block_id}-input">{input_text}</pre>
-                    <div id="{title_input}_download_link"></div>
-                    <script>createDownloadLink("{title_input}", `{input_text_full}`);</script>
-                    """,
-                    """<pre id="{block_id}">{diff_result}</pre>
-                    </div></li></ul><script>updateDiffBlock("{block_id}");</script>"""]
+                                    <a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
+                                    href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}"> Toggle diff</a>
+                                    <div class="collapse" id="{panel_id}">""",
+                                  """
+                                  <p>Input preview: {title_input}</p>
+                                  <pre class="input-area" id="{block_id}-input">{input_text}</pre>
+                                  <div id="{title_input}_download_link"></div>
+                                  <script>createDownloadLink("{title_input}", "{input_text_full}");</script>
+                                  """,
+                                  """<pre id="{block_id}">{diff_result}</pre>
+                                  </div></li></ul><script>updateDiffBlock("{block_id}");</script>"""]
 
     def compute(self, actual_output, expected_output):
         """
@@ -118,7 +116,7 @@ class Diff:
                     "block_id": "diffBlock" + str(test_id),
                     "diff_result": diff_result.replace("\n", "\\n"),
                     "input_text": input_text,
-                    "input_text_full": input_text_full,
+                    "input_text_full": escape_text(input_text_full),
                     "title_input": test_case[0]
                 }
 
@@ -136,17 +134,17 @@ class Diff:
 
         return htmlblock
 
-
     def read_input_example(self, test_case):
         """ This method reads and adds the input test text. """
         statinfo = os.stat(test_case[0])
         # size of input least than 1MB
         if statinfo.st_size < 1048576:
             with open(test_case[0], 'r') as input_file:
-                text = input_file.readlines()                
+                text = input_file.readlines()
                 return ["".join(text), "".join(text[:15])]
         else:
-            return ["", "Input file oversize"]            
+            return ["", "Input file oversize"]
+
 
 def set_feedback(results):
     """
@@ -164,3 +162,7 @@ def set_feedback(results):
     feedback.set_global_result(results['global']['result'])
     feedback.set_grade(results['grade'])
     feedback.set_global_feedback(results['global']['feedback'])
+
+
+def escape_text(text):
+    return text.replace("\n", "\\n").replace('"', '\\"')
