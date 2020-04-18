@@ -165,4 +165,4 @@ def set_feedback(results):
 
 
 def escape_text(text):
-    return text.replace("\n", "\\n").replace('"', '\\"')
+    return text.replace("\n", "\\n").replace("\\", "\\\\").replace('"', '\\"')
