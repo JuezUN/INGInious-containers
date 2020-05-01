@@ -7,6 +7,7 @@ from results import GraderResult, parse_non_zero_return_code
 
 CODE_WORKING_DIR = '/task/student/'
 
+
 def _run_in_sandbox(command, **subprocess_options):
     """
     Runs the given command with the given options and returns a tuple of
@@ -17,15 +18,18 @@ def _run_in_sandbox(command, **subprocess_options):
     command -- A list specifying the program and the arguments to be run.
     subprocess_options -- Additional options sent to subprocess.run.
     """
+    try:
+        completed_process = subprocess.run(["run_student"] + command, stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE, **subprocess_options)
 
-    completed_process = subprocess.run(["run_student"] + command, stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE, **subprocess_options)
+        stdout = completed_process.stdout.decode()
+        stderr = completed_process.stderr.decode()
+        return_code = completed_process.returncode
 
-    stdout = completed_process.stdout.decode()
-    stderr = completed_process.stderr.decode()
-    return_code = completed_process.returncode
+        return return_code, stdout, stderr
+    except Exception as a:
+        return GraderResult.INTERNAL_ERROR, "", str(a)
 
-    return (return_code, stdout, stderr)
 
 def _get_compilation_message_from_return_code(return_code):
     if return_code == 0:
@@ -42,9 +46,11 @@ def _get_compilation_message_from_return_code(return_code):
     else:
         raise AssertionError("Unhandled grader result: " + str(result))
 
+
 class BuildError(Exception):
     def __init__(self, compilation_output):
         self.compilation_output = compilation_output
+
 
 class ProjectNotBuiltError(Exception):
     pass
@@ -80,7 +86,7 @@ class Project(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def run(self, input_file):
+    def run(self, input_file, **run_student_flags):
         """
         Executes this project with the given input file and returns a tuple of
         (return_code, stdout, stderr), where return_code is the status code the process finished
@@ -95,6 +101,7 @@ class Project(object, metaclass=ABCMeta):
 
         Arguments:
         input_file -- a file-like object to be sent as stdin to the code process.
+        run_student_flags: several flags passed to the run_student container like --time, --hard-time and --memory
         """
 
         if not self._is_built:
@@ -120,10 +127,11 @@ class LambdaProject(Project):
     def _do_build(self):
         self._build()
 
-    def run(self, input_file):
-        super().run(input_file)
+    def run(self, input_file, **run_student_flags):
+        super().run(input_file, **run_student_flags)
 
-        return self._run(input_file)
+        return self._run(input_file, **run_student_flags)
+
 
 class ProjectFactory(object, metaclass=ABCMeta):
     """
@@ -151,6 +159,7 @@ class ProjectFactory(object, metaclass=ABCMeta):
 
         pass
 
+
 class PythonProjectFactory(ProjectFactory):
     """
     Implementation of ProjectFactory for Python.
@@ -177,10 +186,10 @@ class PythonProjectFactory(ProjectFactory):
 
         return self.create_from_directory(project_directory)
 
-
     def create_from_directory(self, directory):
-        def run(input_file):
-            command = [self._python_binary, self._main_file_name] + self._additional_flags
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            command = sandbox_flags + [self._python_binary, self._main_file_name] + self._additional_flags
 
             return _run_in_sandbox(command, stdin=input_file, cwd=directory)
 
@@ -193,7 +202,7 @@ class JavaProjectFactory(ProjectFactory):
     """
 
     def __init__(self, main_class='Main', source_version='1.8', sourcepath="src", classpath="lib",
-        bootclasspath=None):
+                 bootclasspath=None):
         """
         Initializes an instance of JavaProjectFactory with the given options.
 
@@ -228,8 +237,8 @@ class JavaProjectFactory(ProjectFactory):
             source_files = glob(os.path.join(os.path.abspath(directory), "**/*.java"), recursive=True)
 
             javac_command = ["javac", "-source", self._source_version, "-d", "build",
-                    "-cp", self._classpath + "/*",
-                    "-sourcepath", self._sourcepath]
+                             "-cp", self._classpath + "/*",
+                             "-sourcepath", self._sourcepath]
 
             if self._bootclasspath is not None:
                 javac_command.extend(["-bootclasspath", self._bootclasspath])
@@ -240,9 +249,10 @@ class JavaProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file):
+        def run(input_file, **run_student_flags):
             classpath_entries = ["build", self._classpath, self._classpath + "/*"]
-            java_command = ["java", "-cp" , os.pathsep.join(classpath_entries), self._main_class]
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            java_command = sandbox_flags + ["java", "-cp", os.pathsep.join(classpath_entries), self._main_class]
             return _run_in_sandbox(java_command, stdin=input_file, cwd=directory)
 
         return LambdaProject(run_function=run, build_function=build)
@@ -260,8 +270,9 @@ class MakefileProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(stderr)
 
-        def run(input_file):
-            run_command = ["make", "run"]
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            run_command = sandbox_flags + ["make", "run"]
             return _run_in_sandbox(run_command, stdin=input_file, cwd=directory)
 
         return LambdaProject(run_function=run, build_function=build)
@@ -292,11 +303,13 @@ class CppProjectFactory(MakefileProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file):
-            run_command = ["./main"]
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            run_command = sandbox_flags + ["./main"]
             return _run_in_sandbox(run_command, stdin=input_file, cwd=project_directory)
 
         return LambdaProject(run_function=run, build_function=build)
+
 
 class CProjectFactory(MakefileProjectFactory):
     """
@@ -323,16 +336,19 @@ class CProjectFactory(MakefileProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file):
-            run_command = ["./main"]
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            run_command = sandbox_flags + ["./main"]
             return _run_in_sandbox(run_command, stdin=input_file, cwd=project_directory)
 
         return LambdaProject(run_function=run, build_function=build)
+
 
 class VerilogProjectFactory(ProjectFactory):
     """
     Implementation of project for verilog code
     """
+
     def __init__(self, additional_flags=[]):
         """
         Initializes an instance of VerilogProjectFactory with the given options.
@@ -341,14 +357,14 @@ class VerilogProjectFactory(ProjectFactory):
 
     def create_from_code(self):
         pass
-        
+
     def create_from_directory(self, directory):
         def build():
             golden_file = glob(os.path.join(os.path.abspath(directory), "*G.v"))
             testbench_file = glob(os.path.join(os.path.abspath(directory), "*T.v"))
             design_file = glob(os.path.join(os.path.abspath(directory), "*D.v"))
 
-            #Compile the testbench using the golden model
+            # Compile the testbench using the golden model
             compilation_golden = ["iverilog", "-o", "golden.out"] + self._additional_flags
             compilation_golden.extend(golden_file)
             compilation_golden.extend(testbench_file)
@@ -356,7 +372,7 @@ class VerilogProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-            #Compile the testbench using the student's code
+            # Compile the testbench using the student's code
             compilation_code = ["iverilog", "-o", "code.out"] + self._additional_flags
             compilation_code.extend(testbench_file)
             compilation_code.extend(design_file)
@@ -364,19 +380,20 @@ class VerilogProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file=None):
-            #Simulate using Icarus Verilog the testbench using the golden model
+        def run(input_file=None, **run_student_flags):
+            # Simulate using Icarus Verilog the testbench using the golden model
             run_command = ["vvp", "golden.out"]
             return_code_golden, stdout_golden, stderr_golden = _run_in_sandbox(run_command, cwd=directory)
 
-            #Simulate using Icarus Verilog the testbench using the student's code
+            # Simulate using Icarus Verilog the testbench using the student's code
             run_command = ["vvp", "code.out"]
-            #Return the stdout of the simulation of the golden model and the run in sandbox of the simulation of the code in evalutation
+            # Return the stdout of the simulation of the golden model and the run in sandbox of the simulation of the
+            # code in evalutation
             return stdout_golden, _run_in_sandbox(run_command, cwd=directory)
-        
+
         return LambdaProject(run_function=run, build_function=build)
 
-    
+
 class VHDLProjectFactory(ProjectFactory):
     def create_from_code(self):
         pass
@@ -385,25 +402,28 @@ class VHDLProjectFactory(ProjectFactory):
         def build():
             source_files = glob(os.path.join(os.path.abspath(directory), "*.vhd"))
             source_files = list(map(os.path.basename, source_files))
-            analyze_command = ["ghdl", "-a"] + source_files 
+            analyze_command = ["ghdl", "-a"] + source_files
             return_code, stdout, stderr = _run_in_sandbox(analyze_command, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
             compilation_command = ["ghdl", "-e", entity_name]
             return_code, stdout, stderr = _run_in_sandbox(compilation_command, cwd=directory)
             if return_code != 0:
-                raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr+ str(analyze_command) + '\n' + str(compilation_command))
+                raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr + str(
+                    analyze_command) + '\n' + str(compilation_command))
 
-        def run(input_file=None):
+        def run(input_file=None, **run_student_flags):
             run_command = ["ghdl -r ", entity_name]
             return _run_in_sandbox(run_command, cwd=directory)
+
         return LambdaProject(run_function=run, build_function=build)
+
 
 _ALL_FACTORIES = {
     "python2": PythonProjectFactory(),
     "python3": PythonProjectFactory(python_binary='python3'),
     "java7": JavaProjectFactory(source_version="1.7",
-        bootclasspath="/usr/lib/jvm/java-1.7.0-openjdk/jre/lib/rt.jar"),
+                                bootclasspath="/usr/lib/jvm/java-1.7.0-openjdk/jre/lib/rt.jar"),
     "java8": JavaProjectFactory(),
     "cpp": CppProjectFactory(["-O2"]),
     "cpp11": CppProjectFactory(additional_flags=["-std=c++11", "-O2"]),
@@ -413,8 +433,10 @@ _ALL_FACTORIES = {
     "vhdl": VHDLProjectFactory()
 }
 
+
 def factory_exists(name):
     return name in _ALL_FACTORIES
+
 
 def get_factory_from_name(name):
     """
@@ -426,3 +448,8 @@ def get_factory_from_name(name):
         raise ValueError("Factory does not exist: " + name)
 
     return _ALL_FACTORIES[name]
+
+
+def _parse_run_student_args(**kwargs):
+    flags = [["--%s" % key.replace("_", '-'), "%s" % str(value)] for key, value in kwargs.items()]
+    return [value for flag in flags for value in flag]

@@ -10,8 +10,10 @@ import html
 import tempfile
 import projects
 import re
+from sys import getsizeof
+import gc
 
-from results import GraderResult, parse_non_zero_return_code
+from results import GraderResult, parse_non_zero_return_code, SandboxCodes
 from zipfile import ZipFile
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
@@ -36,7 +38,12 @@ class SimpleGrader(BaseGrader):
         self.treat_non_zero_as_runtime_error = options.get("treat_non_zero_as_runtime_error", True)
         options['show_input'] = True
         self.diff_tool = Diff(options)
+        self.output_diff_for = set(options.get("output_diff_for", []))
         self.check_output = options.get('check_output', gutils.check_output)
+        self.time_limit = options.get('time_limit', 2)
+        self.hard_time_limit = options.get('hard_time_limit', self.time_limit)
+        self.output_limit = options.get('output_limit', 2)
+        self.memory_limit = options.get('memory_limit', 50)
 
     def create_project(self):
         """
@@ -48,7 +55,6 @@ class SimpleGrader(BaseGrader):
         """
         request = self.submission_request
         project_factory = projects.get_factory_from_name(request.language_name)
-
         if request.problem_type == 'code_multiple_languages':
             project = project_factory.create_from_code(request.code)
             return project
@@ -164,31 +170,46 @@ class SimpleGrader(BaseGrader):
             of zero return code. Check 'results.py')
             And the debug information in the execution.
         """
-
         with open(input_filename, 'r') as input_file, open(expected_output_filename, 'r') as expected_output_file:
-            return_code, stdout, stderr = project.run(input_file)
+            time = self.time_limit
+            hard_time = self.time_limit
+            memory = self.memory_limit
+            return_code, stdout, stderr = project.run(input_file,
+                                                      **{"time": time, "memory": memory, "hard-time": hard_time})
+            stderr = self._remove_sockets_exception(stderr)
             expected_output = expected_output_file.read()
-
-            if return_code == 0 or (not self.treat_non_zero_as_runtime_error and
-                                    parse_non_zero_return_code(return_code) == GraderResult.RUNTIME_ERROR):
+            # In case the stdout takes more memory than the output limit. It sets the stdout to free up memory
+            # and avoid memory leaks.
+            if getsizeof(stdout) > self.output_limit:
+                stdout = ""
+                # Call the garbage collector to reduce memory usage
+                gc.collect()
+                result = GraderResult.OUTPUT_LIMIT_EXCEEDED
+            elif return_code == 0:
                 output_matches = self.check_output(stdout, expected_output)
                 result = GraderResult.ACCEPTED if output_matches else GraderResult.WRONG_ANSWER
-            else:
+            elif self.treat_non_zero_as_runtime_error:
                 result = parse_non_zero_return_code(return_code)
+            else:
+                result = GraderResult.WRONG_ANSWER
 
             debug_info = {}
             if result != GraderResult.ACCEPTED:
                 diff = None
-                if self.generate_diff:
-                    diff = self.diff_tool.compute(stdout, expected_output)
+                if self.generate_diff and result == GraderResult.WRONG_ANSWER and input_filename in self.output_diff_for:
+                    diff = html.escape(self.diff_tool.compute(stdout, expected_output))
 
+                # As output might be very long, store string of max 50 KBs.
+                _stdout_max_length = (2 ** 10) * 50
+                stdout = gutils.reduce_text(stdout, _stdout_max_length)
                 debug_info.update({
                     "input_file": input_filename,
                     "stdout": html.escape(stdout),
                     "stderr": html.escape(stderr),
                     "return_code": return_code,
-                    "diff": None if diff is None else html.escape(diff),
+                    "diff": diff,
                 })
+                gc.collect()
 
             return result, debug_info
 
@@ -242,9 +263,13 @@ class SimpleGrader(BaseGrader):
         with open(custom_input_filename, 'r') as input_file:
             try:
                 project.build()
-                return_code, stdout, stderr = project.run(input_file)
+                time = self.time_limit
+                hard_time = self.time_limit
+                memory = self.memory_limit
+                return_code, stdout, stderr = project.run(input_file,
+                                                          **{"time": time, "memory": memory, "hard-time": hard_time})
                 return return_code, stdout, stderr
-            except:
+            except projects.BuildError as e:
                 raise
 
     def _generate_custom_input_feedback_info(self, return_code, stdout, stderr):
@@ -262,15 +287,27 @@ class SimpleGrader(BaseGrader):
         """
 
         feedback_info = {'global': {}, 'custom': {}}
-
-        if return_code == 0:
+        # In case the stdout takes more memory than the output limit. It sets the stdout to free up memory
+        # and avoid memory leaks.
+        if getsizeof(stdout) > self.output_limit:
+            stdout = ""
+            # Call the garbage collector to reduce memory usage
+            gc.collect()
+            feedback_info['global']['return'] = GraderResult.OUTPUT_LIMIT_EXCEEDED
+            feedback_info['global']['feedback'] = gutils.html_to_rst(
+                "Your code exceeded the output limit: <strong>%s</strong>" % feedback_info['global']['return'].name)
+        elif return_code == 0:
             feedback_info['global']['return'] = GraderResult.ACCEPTED
-            feedback_info['global']['feedback'] = gutils.html_to_rst("Your code finished successfully. Check your output below\n")
+            feedback_info['global']['feedback'] = gutils.html_to_rst(
+                "Your code finished successfully. Check your output below\n.")
         else:
             feedback_info['global']['return'] = parse_non_zero_return_code(return_code)
             feedback_info['global']['feedback'] = gutils.html_to_rst(
                 "Your code did not run successfully: <strong>%s</strong>" % (feedback_info['global']['return'].name,))
-        feedback_info['custom']['stdout'] = stdout
+        # Output length will be 80 KBs at most.
+        _stdout_max_length = (2 ** 10) * 80
+        feedback_info['custom']['stdout'] = gutils.reduce_text(stdout,
+                                                               _stdout_max_length) + "\nLong output, it was reduced."
         feedback_info['custom']['stderr'] = self._remove_sockets_exception(stderr)
 
         feedback_info['global']['result'] = "success" if feedback_info['global'][
