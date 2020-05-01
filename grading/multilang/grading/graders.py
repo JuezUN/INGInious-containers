@@ -39,12 +39,11 @@ class SimpleGrader(BaseGrader):
         options['show_input'] = True
         self.diff_tool = Diff(options)
         self.output_diff_for = set(options.get("output_diff_for", []))
-        self.diff_max_lines = options.get("diff_max_lines", 100)
         self.check_output = options.get('check_output', gutils.check_output)
-        self.time_limit = options.get('time_limit', 4)
+        self.time_limit = options.get('time_limit', 2)
         self.hard_time_limit = options.get('hard_time_limit', self.time_limit)
-        self.output_limit = options.get('output_limit', 4)
-        self.memory_limit = options.get('memory_limit', 100)
+        self.output_limit = options.get('output_limit', 2)
+        self.memory_limit = options.get('memory_limit', 50)
 
     def create_project(self):
         """
@@ -200,7 +199,7 @@ class SimpleGrader(BaseGrader):
                 if self.generate_diff and result == GraderResult.WRONG_ANSWER and input_filename in self.output_diff_for:
                     diff = html.escape(self.diff_tool.compute(stdout, expected_output))
 
-                # As output might be very long, store only a max of 50KBs characters.
+                # As output might be very long, store string of max 50 KBs.
                 _stdout_max_length = (2 ** 10) * 50
                 stdout = gutils.reduce_text(stdout, _stdout_max_length)
                 debug_info.update({
