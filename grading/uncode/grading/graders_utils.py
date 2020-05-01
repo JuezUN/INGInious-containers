@@ -2,6 +2,7 @@
 This module contains the util functions for the grader and feedback_tools modules.
 """
 import rst
+from sys import getsizeof
 
 
 def html_to_rst(html):
@@ -24,3 +25,17 @@ def check_output(actual_output, expected_output):
     """
 
     return actual_output == expected_output
+
+
+def reduce_text(text, max_size):
+    if getsizeof(text) <= max_size:
+        return text
+    else:
+        split_text = text.split('\n')
+        new_text = []
+        for s in split_text:
+            new_text.append(s)
+            if getsizeof(new_text) >= max_size:
+                break
+
+        return '\n'.join(new_text)

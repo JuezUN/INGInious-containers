@@ -12,7 +12,9 @@ TO DO:
 import difflib
 import itertools
 import os
-from graders_utils import html_to_rst as html2rst
+import sys
+
+from graders_utils import reduce_text, html_to_rst as html2rst
 from inginious import feedback
 
 
@@ -53,10 +55,10 @@ class Diff:
                                   <p>Input preview: {title_input}</p>
                                   <pre class="input-area" id="{block_id}-input">{input_text}</pre>
                                   <div id="{title_input}_download_link"></div>
-                                  <script>createDownloadLink("{title_input}", "{input_text_full}");</script>
+                                  <script>createDownloadLink("{title_input}", `{input_text_full}`);</script>
                                   """,
-                                  """<pre id="{block_id}">{diff_result}</pre>
-                                  </div></li></ul><script>updateDiffBlock("{block_id}");</script>"""]
+                                  """<pre id="{block_id}"></pre>
+                                  </div></li></ul><script>updateDiffBlock("{block_id}", `{diff_result}`);</script>"""]
 
     def compute(self, actual_output, expected_output):
         """
@@ -68,8 +70,14 @@ class Diff:
             - actual_output (str): First text given for the diff tool.
             - expected_output (str): Second text given for the diff tool.
         """
-        diff_generator = difflib.unified_diff(expected_output.split('\n'), actual_output.split('\n'),
-                                              n=self.diff_context_lines, fromfile='expected_output',
+        #  100 KBs will be the max length of stdout and expected output to calculate diff
+        _max_length = (2 ** 10) * 100
+        expected = reduce_text(expected_output, _max_length)
+        expected = expected.split('\n')
+        actual = reduce_text(actual_output, _max_length)
+        actual = actual.split('\n')
+        diff_generator = difflib.unified_diff(expected, actual, n=self.diff_context_lines,
+                                              fromfile='expected_output',
                                               tofile='your_output')
 
         # Remove file names (legend will be added in the frontend)
@@ -114,7 +122,8 @@ class Diff:
                     "result_name": result.name,
                     "panel_id": "collapseDiff" + str(test_id),
                     "block_id": "diffBlock" + str(test_id),
-                    "diff_result": diff_result.replace("\n", "\\n"),
+                    "input_text_id": "input_text_" + str(test_id),
+                    "diff_result": escape_text(diff_result),
                     "input_text": input_text,
                     "input_text_full": escape_text(input_text_full),
                     "title_input": test_case[0]
@@ -165,4 +174,4 @@ def set_feedback(results):
 
 
 def escape_text(text):
-    return text.replace("\n", "\\n").replace('"', '\\"')
+    return text.replace('\\', "\\\\").replace('`', "\\`").replace('\n', "\\n")

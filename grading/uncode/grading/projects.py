@@ -25,9 +25,10 @@ def _run_in_sandbox(command, **subprocess_options):
         stdout = completed_process.stdout.decode()
         stderr = completed_process.stderr.decode()
         return_code = completed_process.returncode
+
         return return_code, stdout, stderr
-    except Exception as e:
-        return GraderResult.INTERNAL_ERROR, "", e
+    except Exception as a:
+        return GraderResult.INTERNAL_ERROR, "", str(a)
 
 
 def _get_compilation_message_from_return_code(return_code):
@@ -85,7 +86,7 @@ class Project(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def run(self, input_file):
+    def run(self, input_file, **run_student_flags):
         """
         Executes this project with the given input file and returns a tuple of
         (return_code, stdout, stderr), where return_code is the status code the process finished
@@ -100,6 +101,7 @@ class Project(object, metaclass=ABCMeta):
 
         Arguments:
         input_file -- a file-like object to be sent as stdin to the code process.
+        run_student_flags: several flags passed to the run_student container like --time, --hard-time and --memory
         """
 
         if not self._is_built:
@@ -125,10 +127,10 @@ class LambdaProject(Project):
     def _do_build(self):
         self._build()
 
-    def run(self, input_file):
-        super().run(input_file)
+    def run(self, input_file, **run_student_flags):
+        super().run(input_file, **run_student_flags)
 
-        return self._run(input_file)
+        return self._run(input_file, **run_student_flags)
 
 
 class ProjectFactory(object, metaclass=ABCMeta):
@@ -185,8 +187,9 @@ class PythonProjectFactory(ProjectFactory):
         return self.create_from_directory(project_directory)
 
     def create_from_directory(self, directory):
-        def run(input_file):
-            command = [self._python_binary, self._main_file_name] + self._additional_flags
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            command = sandbox_flags + [self._python_binary, self._main_file_name] + self._additional_flags
 
             return _run_in_sandbox(command, stdin=input_file, cwd=directory)
 
@@ -246,9 +249,10 @@ class JavaProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file):
+        def run(input_file, **run_student_flags):
             classpath_entries = ["build", self._classpath, self._classpath + "/*"]
-            java_command = ["java", "-cp", os.pathsep.join(classpath_entries), self._main_class]
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            java_command = sandbox_flags + ["java", "-cp", os.pathsep.join(classpath_entries), self._main_class]
             return _run_in_sandbox(java_command, stdin=input_file, cwd=directory)
 
         return LambdaProject(run_function=run, build_function=build)
@@ -266,8 +270,9 @@ class MakefileProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(stderr)
 
-        def run(input_file):
-            run_command = ["make", "run"]
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            run_command = sandbox_flags + ["make", "run"]
             return _run_in_sandbox(run_command, stdin=input_file, cwd=directory)
 
         return LambdaProject(run_function=run, build_function=build)
@@ -298,8 +303,9 @@ class CppProjectFactory(MakefileProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file):
-            run_command = ["./main"]
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            run_command = sandbox_flags + ["./main"]
             return _run_in_sandbox(run_command, stdin=input_file, cwd=project_directory)
 
         return LambdaProject(run_function=run, build_function=build)
@@ -330,8 +336,9 @@ class CProjectFactory(MakefileProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file):
-            run_command = ["./main"]
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            run_command = sandbox_flags + ["./main"]
             return _run_in_sandbox(run_command, stdin=input_file, cwd=project_directory)
 
         return LambdaProject(run_function=run, build_function=build)
@@ -373,7 +380,7 @@ class VerilogProjectFactory(ProjectFactory):
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
-        def run(input_file=None):
+        def run(input_file=None, **run_student_flags):
             # Simulate using Icarus Verilog the testbench using the golden model
             run_command = ["vvp", "golden.out"]
             return_code_golden, stdout_golden, stderr_golden = _run_in_sandbox(run_command, cwd=directory)
@@ -405,7 +412,7 @@ class VHDLProjectFactory(ProjectFactory):
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr + str(
                     analyze_command) + '\n' + str(compilation_command))
 
-        def run(input_file=None):
+        def run(input_file=None, **run_student_flags):
             run_command = ["ghdl -r ", entity_name]
             return _run_in_sandbox(run_command, cwd=directory)
 
@@ -441,3 +448,8 @@ def get_factory_from_name(name):
         raise ValueError("Factory does not exist: " + name)
 
     return _ALL_FACTORIES[name]
+
+
+def _parse_run_student_args(**kwargs):
+    flags = [["--%s" % key.replace("_", '-'), "%s" % str(value)] for key, value in kwargs.items()]
+    return [value for flag in flags for value in flag]
