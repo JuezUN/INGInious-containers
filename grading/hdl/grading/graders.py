@@ -103,7 +103,7 @@ class HDLGrader(BaseGrader):
 
             result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(results)
             test_cases = (testbench_file_name, expected_output_name)
-            feedback_str = self.diff_tool.to_html_block(0, result, test_cases, debug_info)
+            feedback_str = self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
 
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)
@@ -148,55 +148,8 @@ def handle_problem_action(problem_id, testbench, output, options=None):
 
 
 class DiffWaveDrom(Diff):
-    def to_html_block(self, test_id, result, test_case, debug_info):
-        """
-        This method creates a html block (rst embedding html) for a single test case.
-        Args:
-            - test_id (int):
-            - result: Represents the results for the feedback (check 'results.py')
-            - test_case (tuple): A pair of names. The input filename and the expected output filename
-            - debug_info (dict): Debugging information about the execution of the source code.
-        Returns:
-            An string representing the html block to be presented in the feedback about
-            a single test case.
-        """
-        input_filename = test_case[0]
-        if input_filename in self.output_diff_for:
-            diff_result = (
-                debug_info.get("files_feedback", {}).get(input_filename, {}).get("diff", None)
-            )
-
-            diff_available = diff_result is not None
-            diff_html = ""
-
-            if diff_available:
-                input_text_full, input_text = self.read_input_example(test_case)
-                template_info = {
-                    "test_id": test_id + 1,
-                    "result_name": result.name,
-                    "panel_id": "collapseDiff" + str(test_id),
-                    "block_id": "diffBlock" + str(test_id),
-                    "diff_result": diff_result.replace("\n", "\\n"),
-                    "input_text": input_text,
-                    "input_text_full": input_text_full,
-                    "title_input": test_case[0]
-                }
-
-                if self.show_input or input_text_full == "":
-                    diff_html = "".join(self.testcase_template).format(**template_info)
-                else:
-                    diff_html = "".join([self.testcase_template[0], self.testcase_template[2]]).format(**template_info)
-            else:
-                diff_html = """<ul><li><strong>Test {0}: {1} </strong></li></ul>""".format(
-                    test_id + 1, result.name)
-            # The function called is changed to updateWaveDromBlock where besides of the initial diff a timing diagram is shown
-            diff_html = diff_html.replace("updateDiffBlock", "updateWaveDromBlock")
-            # Embedding the html containing the diff into rst code.
-            htmlblock = html2rst(diff_html)
-        else:
-            htmlblock = '- **Test %d: %s**' % (test_id + 1, result.name)
-
-
-        return htmlblock
-
-
+    def hdl_to_html_block(self, test_id, result, test_case, debug_info):
+        html_block = self.to_html_block(test_id, result, test_case, debug_info)
+        if html_block.find("updateDiffBlock") != -1:
+            html_block = html_block.replace("updateDiffBlock", "updateWaveDromBlock")
+        return html_block

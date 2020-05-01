@@ -177,6 +177,7 @@ class SimpleGrader(BaseGrader):
             memory = self.memory_limit
             return_code, stdout, stderr = project.run(input_file,
                                                       **{"time": time, "memory": memory, "hard-time": hard_time})
+            stderr = self._remove_sockets_exception(stderr)
             expected_output = expected_output_file.read()
             # In case the stdout takes more memory than the output limit. It sets the stdout to free up memory
             # and avoid memory leaks.
@@ -188,10 +189,10 @@ class SimpleGrader(BaseGrader):
             elif return_code == 0:
                 output_matches = self.check_output(stdout, expected_output)
                 result = GraderResult.ACCEPTED if output_matches else GraderResult.WRONG_ANSWER
-            elif not self.treat_non_zero_as_runtime_error:
-                result = GraderResult.WRONG_ANSWER
-            else:
+            elif self.treat_non_zero_as_runtime_error:
                 result = parse_non_zero_return_code(return_code)
+            else:
+                result = GraderResult.WRONG_ANSWER
 
             debug_info = {}
             if result != GraderResult.ACCEPTED:

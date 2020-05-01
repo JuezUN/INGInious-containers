@@ -16,6 +16,7 @@ import sys
 
 from graders_utils import reduce_text, html_to_rst as html2rst
 from inginious import feedback
+from results import GraderResult
 
 
 class Diff:
@@ -47,18 +48,20 @@ class Diff:
         self.output_diff_for = set(options.get("output_diff_for", []))
         self.show_input = options.get('show_input', False)
 
-        self.testcase_template = ["""<ul><li><strong>Test {test_id}: {result_name} </strong>
+        self.toggle_debug_info_template = ["""<ul><li><strong>Test {test_id}: {result_name} </strong>
                                     <a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
                                     href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}"> Toggle diff</a>
-                                    <div class="collapse" id="{panel_id}">""",
-                                  """
-                                  <p>Input preview: {title_input}</p>
+                                    <div class="collapse" id="{panel_id}">""", """</div></li></ul>"""]
+        self.input_template = """<p>Input preview: {title_input}</p>
                                   <pre class="input-area" id="{block_id}-input">{input_text}</pre>
                                   <div id="{title_input}_download_link"></div>
                                   <script>createDownloadLink("{title_input}", `{input_text_full}`);</script>
-                                  """,
-                                  """<pre id="{block_id}"></pre>
-                                  </div></li></ul><script>updateDiffBlock("{block_id}", `{diff_result}`);</script>"""]
+                                  """
+        self.diff_template = """<pre id="{block_id}"></pre>
+                                <script>updateDiffBlock("{block_id}", `{diff_result}`);</script>"""
+        self.runtime_error_template = """<p>Error: </p><br><pre>{stderr}</pre>"""
+
+        self.not_debug_info_template = """<ul><li><strong>Test {0}: {1} </strong></li></ul>"""
 
     def compute(self, actual_output, expected_output):
         """
@@ -107,41 +110,41 @@ class Diff:
             a single test case.
         """
         input_filename = test_case[0]
-        if input_filename in self.output_diff_for:
-            diff_result = (
-                debug_info.get("files_feedback", {}).get(input_filename, {}).get("diff", None)
-            )
+        if result in [GraderResult.ACCEPTED, GraderResult.INTERNAL_ERROR] or input_filename not in self.output_diff_for:
+            text = self.not_debug_info_template.format(
+                test_id + 1, result.name)
+            return html2rst(text)
 
-            diff_available = diff_result is not None
-            diff_html = ""
+        diff_result = debug_info.get("files_feedback", {}).get(input_filename, {}).get("diff", None)
+        stderr = debug_info.get("files_feedback", {}).get(input_filename, {}).get("stderr", "")
+        diff_available = diff_result is not None
+        input_text_full, input_text = self.read_input_example(test_case)
+        template_info = {
+            "test_id": test_id + 1,
+            "result_name": result.name,
+            "panel_id": "collapseDiff" + str(test_id),
+            "block_id": "diffBlock" + str(test_id),
+            "input_text_id": "input_text_" + str(test_id),
+            "input_text": input_text,
+            "input_text_full": escape_text(input_text_full),
+            "title_input": test_case[0]
+        }
+        template = [self.toggle_debug_info_template[0]]
 
-            if diff_available:
-                input_text_full, input_text = self.read_input_example(test_case)
-                template_info = {
-                    "test_id": test_id + 1,
-                    "result_name": result.name,
-                    "panel_id": "collapseDiff" + str(test_id),
-                    "block_id": "diffBlock" + str(test_id),
-                    "input_text_id": "input_text_" + str(test_id),
-                    "diff_result": escape_text(diff_result),
-                    "input_text": input_text,
-                    "input_text_full": escape_text(input_text_full),
-                    "title_input": test_case[0]
-                }
+        if self.show_input or input_text_full == "":
+            template.append(self.input_template)
 
-                if self.show_input or input_text_full == "":
-                    diff_html = "".join(self.testcase_template).format(**template_info)
-                else:
-                    diff_html = "".join([self.testcase_template[0], self.testcase_template[2]]).format(**template_info)
-            else:
-                diff_html = """<ul><li><strong>Test {0}: {1} </strong></li></ul>""".format(
-                    test_id + 1, result.name)
-            # Embedding the html containing the diff into rst code.
-            htmlblock = html2rst(diff_html)
-        else:
-            htmlblock = '- **Test %d: %s**' % (test_id + 1, result.name)
+        if diff_available:
+            template_info["diff_result"] = escape_text(diff_result)
+            template.append(self.diff_template)
 
-        return htmlblock
+        if GraderResult.RUNTIME_ERROR == result:
+            template_info["stderr"] = stderr
+            template.append(self.runtime_error_template)
+        template.append(self.toggle_debug_info_template[1])
+        diff_html = "".join(template).format(**template_info)
+
+        return html2rst(diff_html)
 
     def read_input_example(self, test_case):
         """ This method reads and adds the input test text. """
@@ -174,4 +177,4 @@ def set_feedback(results):
 
 
 def escape_text(text):
-    return text.replace('\\', "\\\\").replace('`', "\\`").replace('\n', "\\n")
+    return text.replace('\\', "\\\\").replace('`', "\\`").replace('\n', "\\n").replace("$", "\\$")
