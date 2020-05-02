@@ -27,7 +27,7 @@ def check_output(actual_output, expected_output):
     return actual_output == expected_output
 
 
-def reduce_text(text, max_size):
+def reduce_text(text, max_size, additional_text=""):
     if getsizeof(text) <= max_size:
         return text
     else:
@@ -37,5 +37,6 @@ def reduce_text(text, max_size):
             new_text.append(s)
             if getsizeof(new_text) >= max_size:
                 break
+        new_text.append(additional_text)
 
         return '\n'.join(new_text)

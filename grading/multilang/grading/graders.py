@@ -307,7 +307,7 @@ class SimpleGrader(BaseGrader):
         # Output length will be 80 KBs at most.
         _stdout_max_length = (2 ** 10) * 80
         feedback_info['custom']['stdout'] = gutils.reduce_text(stdout,
-                                                               _stdout_max_length) + "\nLong output, it was reduced."
+                                                               _stdout_max_length, "Long output, it was reduced.")
         feedback_info['custom']['stderr'] = self._remove_sockets_exception(stderr)
 
         feedback_info['global']['result'] = "success" if feedback_info['global'][
