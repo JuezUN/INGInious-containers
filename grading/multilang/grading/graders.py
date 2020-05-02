@@ -42,8 +42,8 @@ class SimpleGrader(BaseGrader):
         self.check_output = options.get('check_output', gutils.check_output)
         self.time_limit = options.get('time_limit', 2)
         self.hard_time_limit = options.get('hard_time_limit', self.time_limit)
-        self.output_limit = options.get('output_limit', 2)
-        self.memory_limit = options.get('memory_limit', 50)
+        self.output_limit = options.get('output_limit', (2 ** 20) * 2)
+        self.memory_limit = options.get('memory_limit', (2 ** 20) * 50)
 
     def create_project(self):
         """
