@@ -3,8 +3,6 @@
 FROM    unjudge/uncode-c-base
 LABEL   org.inginious.grading.name="Notebook"
 
-#RUN     yum install -y gcc gcc-c++ gdb cpp
-
 # Add python modules and OK grading module
 RUN     pip3.5 install --upgrade pip
 RUN     pip3.5 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience \
