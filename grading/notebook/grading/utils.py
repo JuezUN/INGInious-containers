@@ -1,8 +1,22 @@
 import json
+import subprocess
 
 import graders_utils as gutils
 from graders_utils import html_to_rst as html2rst
 from results import GraderResult
+
+
+def _run_command(command, **additional_flags):
+    try:
+        completed_process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **additional_flags)
+        stdout = completed_process.stdout.decode()
+        stderr = completed_process.stderr.decode()
+        return_code = completed_process.returncode
+    except Exception as e:
+        return_code = GraderResult.INTERNAL_ERROR
+        stdout = ""
+        stderr = str(e)
+    return return_code, stdout, stderr
 
 
 def _generate_feedback_info(grader_results, debug_info, weights, tests):
@@ -61,7 +75,8 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         "total": "%.2f" % test_result["total"],
     }
     test_name_template_html = [
-        """<ul><li><strong>{test_name}: {result_name} - {total} / {weight} </strong>""",
+        """<ul class="list_disc" style="font-size:None;"><li>
+        <strong style="font-size:15px"> {test_name}: </strong><i>{result_name} - {total} / {weight} </i>""",
         "</li></ul>"
     ]
     test_results_template_html = [
@@ -71,32 +86,45 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         </a><div class="collapse" id="{panel_id}">""",
         "</div>"
     ]
-    test_case_error_template_html = """- <strong>Case {case_id}:</strong> {case_error} <br>"""
-    test_case_wrong_answer_template_html = """- <strong>Case {case_id}:</strong> 
-        <a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" href="#{case_panel_id}" 
-        aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
-        <div class="collapse" id="{case_panel_id}"><div class="row"><strong>Executed code:</strong><pre>{case_code}</pre></div>
-        <br><div class="row"><strong>Output difference</strong><pre>{case_output_diff}</pre></div></div><br>"""
 
-    result_html = test_name_template_html[0].format(**template_info)
+    test_case_error_template_html = """<strong>Error:</strong> {case_error}<br><br>"""
+    test_case_wrong_answer_template_html = """
+                                        <br><strong>Output difference:</strong><pre>{case_output_diff}</pre><br>"""
+    test_case_debug_info_template_html = """<ul class="list_disc" style="font-size:None; list-style-type: square;"><li>
+        <strong>Case {case_id}:</strong><a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
+        href="#{case_panel_id}" aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
+        <div class="collapse" id="{case_panel_id}">{debug_info}</div></li></ul>
+        """
+    test_case_executed_code = """<strong>Executed code:</strong><pre>{case_code}</pre>"""
+
+    result_html = [test_name_template_html[0]]
     test_result_name = test_result["result"].name
-    if test_result_name in ["RUNTIME_ERROR", "WRONG_ANSWER"] and cases_debug_info and show_debug_info:
-        result_html += test_results_template_html[0].format(**template_info)
-        for i, case_debug_info in cases_debug_info.items():
-            if case_debug_info["is_runtime_error"]:
-                result_html += test_case_error_template_html.format(case_id=i, case_error=case_debug_info["error"])
-            else:
+    if cases_debug_info and show_debug_info:
+        if test_result_name == "INTERNAL_ERROR":
+            result_html.append(
+                "<br>This error might be related to a runtime error in the grading side code. Please check " \
+                "with your professor for more information.")
+        else:
+            result_html.append(test_results_template_html[0])
+            for i, case_debug_info in cases_debug_info.items():
+                debug_info = []
+                if case_debug_info["is_runtime_error"]:
+                    debug_info.append(test_case_error_template_html.format(case_error=case_debug_info["error"]))
+                if "case_code" in case_debug_info:
+                    debug_info.append(test_case_executed_code.format(
+                        case_code=case_debug_info["case_code"].replace("/n", "<br>")))
+                if not case_debug_info["is_runtime_error"]:
+                    case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>")
+                    debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
                 case_data = {
                     "case_id": i,
                     "case_panel_id": "collapse_debug_test_%s_case_%s" % (str(test_id), str(i)),
-                    "case_code": case_debug_info["case_code"].replace("/n", "<br>"),
-                    "case_output_diff": case_debug_info["case_output_diff"].replace("/n", "<br>")
+                    "debug_info": ''.join(debug_info)
                 }
-                result_html += test_case_wrong_answer_template_html.format(**case_data)
-        result_html += test_results_template_html[1]
-    elif test_result_name == "INTERNAL_ERROR":
-        result_html += "<br>This error might be related to a runtime error in the grading side code. Please check " \
-                       "with your professor for more information."
-    result_html += test_name_template_html[1]
+                result_html.append(test_case_debug_info_template_html.format(**case_data))
+            result_html.append(test_results_template_html[1])
+
+    result_html.append(test_name_template_html[1])
+    result_html = ''.join(result_html).format(**template_info)
 
     return html2rst(result_html)
