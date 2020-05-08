@@ -1,27 +1,10 @@
-import os
-import tempfile
 import subprocess
-from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR
+import re
+import ast
 
-
-def _run_in_sandbox(command, **subprocess_options):
-    """
-    Runs the given command with the given options and returns a tuple of
-    (return_code, stdout, stderr). It is provided as a helper method for implementations of
-    Project. The subprocess_options are sent directly to subprocess.run().
-
-    Arguments:
-    command -- A list specifying the program and the arguments to be run.
-    subprocess_options -- Additional options sent to subprocess.run.
-    """
-
-    completed_process = subprocess.run(["run_student"] + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **subprocess_options)
-
-    stdout = completed_process.stdout.decode()
-    stderr = completed_process.stderr.decode()
-    return_code = completed_process.returncode
-
-    return return_code, stdout, stderr
+from results import GraderResult
+from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR, _run_in_sandbox, _parse_run_student_args
+from .utils import _run_command
 
 
 class NotebookProjectFactory(ProjectFactory):
@@ -39,19 +22,110 @@ class NotebookProjectFactory(ProjectFactory):
         """
 
         self._additional_flags = additional_flags if additional_flags is not None else []
+        self.filename = None
+        self.notebook_path = None
 
     # This method does not apply for notebooks.
     def create_from_code(self, code=None):
         return
 
     def create_from_directory(self, directory=None):
-        def run(input_file):
-            command = ["ok", "--local", "--score"] + ["-q", input_file] + self._additional_flags
+        def build():
+            _copy_files_to_student_dir(self.notebook_path)
+            return_code, stdout, stderr = _convert_nb_to_python_script(self.notebook_path, self.filename)
+            if return_code != 0:
+                return GraderResult.INTERNAL_ERROR
+            else:
+                return return_code
+
+        def run(input_file, **run_student_flags):
+            sandbox_flags = _parse_run_student_args(**run_student_flags)
+            ok_py_command = ["ok", "--local", "--score", "-q", input_file]
+            command = sandbox_flags + ok_py_command + self._additional_flags
 
             return _run_in_sandbox(command, cwd="student/")
 
-        return LambdaProject(run_function=run)
+        return LambdaProject(run_function=run, build_function=build)
+
+
+def _copy_files_to_student_dir(notebook_filepath):
+    return_code, stdout, stderr = _run_command(["ls"], cwd="/task/")
+    files = stdout.split('\n')
+    no_copy_files = ["run", "task.yaml", notebook_filepath, "student"]
+    for file in files:
+        if file and file not in no_copy_files:
+            _run_command(["cp", "-r", file, "/task/student/"], cwd="/task/")
+
+
+def _convert_nb_to_python_script(notebook_path, filename):
+    # Extract the python code within the same folder where the code is located.
+    command = ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True"]
+    return_code, stdout, stderr = _run_command(command)
+
+    python_script_path = "{}.py".format(filename)
+    processed_code = _preprocess_code(python_script_path)
+    with open(python_script_path, "w") as python_script:
+        python_script.write(processed_code)
+    return return_code, stdout, stderr
+
+
+def _preprocess_code(python_script_path):
+    with open(python_script_path, "r") as python_script:
+        lines = python_script.readlines()
+    code = _remove_unwanted_lines(lines)
+    return _enclose_code_with_try(code)
+
+
+def _remove_unwanted_lines(lines):
+    result = ["import subprocess"]
+    get_ipython_pattern = r"get_ipython\(\)"
+    install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
+    shell_command_pattern = r"get_ipython\(\)\.system\(\'(.+?)\'\)"
+    comment_line_pattern = r"#.*"
+    print_pattern = r"print\(.*\)"
+    for line in lines:
+        strip_line = line.strip()
+        if re.match(shell_command_pattern, strip_line) and not re.match(install_module_pattern, strip_line):
+            try:
+                shell_command = re.search(shell_command_pattern, strip_line).group(1).split()
+                new_line = "call = subprocess.run({}, stdout=subprocess.PIPE)".format(shell_command)
+                result.append(new_line)
+                new_line = "print(call.stdout.decode('utf-8'))"
+                result.append(new_line)
+            except Exception as e:
+                pass
+            continue
+        elif re.match(get_ipython_pattern, strip_line) \
+                or re.match(comment_line_pattern, strip_line) \
+                or re.match(print_pattern, strip_line) or not strip_line:
+            continue
+        result.append(line)
+    return '\n'.join(result)
+
+
+def _enclose_code_with_try(code):
+    try:
+        parser = ast.parse(code)
+    except SyntaxError as e:
+        return code
+    main_lines = [child_node.lineno - 1 for child_node in parser.body]
+    code_lines = [line for line in code.split('\n')]
+    total_lines = len(code_lines)
+    total_main_lines = len(main_lines)
+    result = []
+    i = 0
+    while i < total_main_lines:
+        result.append("try:")
+        right_limit = total_lines
+        if i + 1 < total_main_lines:
+            right_limit = main_lines[i + 1]
+        for j in range(main_lines[i], right_limit):
+            if code_lines[j]:
+                result.append("\t{}".format(code_lines[j]))
+        result.append("except:\n\tpass")
+        i += 1
+    return '\n'.join(result)
 
 
 def get_notebook_factory():
-    return NotebookProjectFactory(additional_flags=["--timeout", "20"])
+    return NotebookProjectFactory()
