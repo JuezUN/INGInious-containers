@@ -75,7 +75,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         "total": "%.2f" % test_result["total"],
     }
     test_name_template_html = [
-        """<ul class="list_disc" style="font-size:None;"><li>
+        """<ul class="list_disc" style="font-size:12px;"><li>
         <strong style="font-size:15px"> {test_name}: </strong><i>{result_name} - {total} / {weight} </i>""",
         "</li></ul>"
     ]
@@ -90,7 +90,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
     test_case_error_template_html = """<strong>Error:</strong><br><pre>{case_error}</pre>"""
     test_case_wrong_answer_template_html = """
                                         <br><strong>Output difference:</strong><pre>{case_output_diff}</pre><br>"""
-    test_case_debug_info_template_html = """<ul class="list_disc" style="font-size:None; list-style-type: square;"><li>
+    test_case_debug_info_template_html = """<ul class="list_disc" style="font-size:12px; list-style-type: square;"><li>
         <strong>Case {case_id}:</strong><a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
         href="#{case_panel_id}" aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
         <div class="collapse" id="{case_panel_id}">{debug_info}</div></li></ul>
