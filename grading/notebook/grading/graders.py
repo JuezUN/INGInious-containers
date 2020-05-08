@@ -174,9 +174,14 @@ class NotebookGrader(BaseGrader):
                 is_runtime_error, found_professor_code_exception, cases_info_exception = self._check_exception(stdout,
                                                                                                                test_name,
                                                                                                                total_cases)
+                # Merge results
                 for key, value in cases_info.items():
                     if key in cases_info_exception:
                         cases_info[key] = {**value, **cases_info_exception[key]}
+                for key, value in cases_info_exception.items():
+                    if key not in cases_info:
+                        cases_info[key] = cases_info_exception[key]
+
                 if is_runtime_error:
                     if found_professor_code_exception:
                         result = GraderResult.INTERNAL_ERROR
@@ -269,15 +274,31 @@ class NotebookGrader(BaseGrader):
             case_error_index_end = lines.index(case_error_str_end, case_error_index_start, len(lines))
             case_lines = lines[case_error_index_start:case_error_index_end]
             found_student_code_exception = False
-            for line in case_lines:
+            traceback_str = 'Traceback (most recent call last):'
+            traceback_index = 0
+            for index, line in enumerate(case_lines):
                 error_pattern = re.compile("[a-zA-Z]*Error.*")
-                if line.startswith('Traceback (most recent call last):'):
+                if line.startswith(traceback_str):
                     is_runtime_error = True
                     found_student_code_exception = True
+                    traceback_index = index
                 elif error_pattern.match(line) or line == "Exception":
                     # Look for the error that caused the student exception
                     if found_student_code_exception:
-                        cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": line}
+                        code_error = []
+                        try:
+                            for error_index in range(index, traceback_index - 1, -1):
+                                error_line = case_lines[error_index]
+                                if "File" in error_line:
+                                    if " in " in error_line:
+                                        error_line = "in '{}'".format(error_line.split()[-1])
+                                    break
+                                code_error.append(error_line.replace('{', '{{').replace('}', '}}'))
+                        except:
+                            code_error = [line]
+                        error = "{}\n...\n{}\n".format(traceback_str, '\n'.join(reversed(code_error)))
+                        cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": error}
+                        break
                     else:
                         is_runtime_error = True
                         found_professor_code_exception = True

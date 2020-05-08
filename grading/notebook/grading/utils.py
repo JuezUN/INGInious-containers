@@ -87,7 +87,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         "</div>"
     ]
 
-    test_case_error_template_html = """<strong>Error:</strong> {case_error}<br><br>"""
+    test_case_error_template_html = """<strong>Error:</strong><br><pre>{case_error}</pre>"""
     test_case_wrong_answer_template_html = """
                                         <br><strong>Output difference:</strong><pre>{case_output_diff}</pre><br>"""
     test_case_debug_info_template_html = """<ul class="list_disc" style="font-size:None; list-style-type: square;"><li>
