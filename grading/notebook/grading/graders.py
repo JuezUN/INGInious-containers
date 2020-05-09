@@ -298,7 +298,6 @@ class NotebookGrader(BaseGrader):
                             code_error = [line]
                         error = "{}\n...\n{}\n".format(traceback_str, '\n'.join(reversed(code_error)))
                         cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": error}
-                        break
                     else:
                         is_runtime_error = True
                         found_professor_code_exception = True
