@@ -82,7 +82,7 @@ def _remove_unwanted_lines(lines):
     install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
     shell_command_pattern = r"get_ipython\(\)\.system\(\'(.+?)\'\)"
     comment_line_pattern = r"#.*"
-    print_pattern = r"print\(.*\)"
+    print_pattern = r".*print\(.*\).*"
     for line in lines:
         strip_line = line.strip()
         if re.match(shell_command_pattern, strip_line) and not re.match(install_module_pattern, strip_line):
@@ -95,9 +95,12 @@ def _remove_unwanted_lines(lines):
             except Exception as e:
                 pass
             continue
+        elif re.match(print_pattern, line):
+            result.append(re.sub(r"print\(.*\)", "print('', end='')", line))
+            continue
         elif re.match(get_ipython_pattern, strip_line) \
                 or re.match(comment_line_pattern, strip_line) \
-                or re.match(print_pattern, strip_line) or not strip_line:
+                or not strip_line:
             continue
         result.append(line)
     return '\n'.join(result)

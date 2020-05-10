@@ -82,6 +82,7 @@ class NotebookGrader(BaseGrader):
 
         tests_results, debug_info = self._run_all_tests(project, tests, weights)
 
+        # TODO: Catch exceptions an return INTERNAL ERROR
         # Check for errors in run
         if GraderResult.COMPILATION_ERROR in tests_results:
             compilation_output = debug_info.get("compilation_output", "")
