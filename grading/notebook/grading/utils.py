@@ -7,16 +7,21 @@ from results import GraderResult
 
 
 def _run_command(command, **additional_flags):
-    try:
-        completed_process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **additional_flags)
-        stdout = completed_process.stdout.decode()
-        stderr = completed_process.stderr.decode()
-        return_code = completed_process.returncode
-    except Exception as e:
-        return_code = GraderResult.INTERNAL_ERROR
-        stdout = ""
-        stderr = str(e)
+    # try:
+    completed_process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **additional_flags)
+    stdout = completed_process.stdout.decode()
+    stderr = completed_process.stderr.decode()
+    return_code = completed_process.returncode
+    # except Exception as e:
+    #     return_code = GraderResult.INTERNAL_ERROR
+    #     stdout = ""
+    #     stderr = str(e)
     return return_code, stdout, stderr
+
+
+def _feedback_str_for_internal_error():
+    return "**{}**: There was an error while running your notebook. Please submit again.\n\n".format(
+        GraderResult.INTERNAL_ERROR.name)
 
 
 def _generate_feedback_info(grader_results, debug_info, weights, tests):
@@ -48,7 +53,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     internal_errors = []
     for test_feedback in debug_info["files_feedback"].values():
         cases_errors = ["\t- Case {}: {}".format(i, case["error"]) for i, case in test_feedback["cases_info"].items() if
-                        "is_internal_error" in case]
+                        "is_grading_error" in case]
         if cases_errors:
             internal_error = [test_feedback["test_name"]] + cases_errors
             internal_errors.append("\n".join(internal_error))
@@ -98,31 +103,30 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
     test_case_executed_code = """<strong>Executed code:</strong><pre>{case_code}</pre>"""
 
     result_html = [test_name_template_html[0]]
-    test_result_name = test_result["result"].name
+    # test_result_name = test_result["result"].name
     if cases_debug_info and show_debug_info:
-        if test_result_name == "INTERNAL_ERROR":
-            result_html.append(
-                "<br>This error might be related to a runtime error in the grading side code. Please check " \
-                "with your professor for more information.")
-        else:
-            result_html.append(test_results_template_html[0])
-            for i, case_debug_info in cases_debug_info.items():
-                debug_info = []
-                if case_debug_info["is_runtime_error"]:
-                    debug_info.append(test_case_error_template_html.format(case_error=case_debug_info["error"]))
-                if "case_code" in case_debug_info:
-                    debug_info.append(test_case_executed_code.format(
-                        case_code=case_debug_info["case_code"].replace("/n", "<br>")))
-                if not case_debug_info["is_runtime_error"]:
-                    case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>")
-                    debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
-                case_data = {
-                    "case_id": i,
-                    "case_panel_id": "collapse_debug_test_%s_case_%s" % (str(test_id), str(i)),
-                    "debug_info": ''.join(debug_info)
-                }
-                result_html.append(test_case_debug_info_template_html.format(**case_data))
-            result_html.append(test_results_template_html[1])
+        # if test_result_name == "GRADING_RUNTIME_ERROR":
+        #     result_html.append(
+        #         "<br>There was an error while running your code.")
+        # else:
+        result_html.append(test_results_template_html[0])
+        for i, case_debug_info in cases_debug_info.items():
+            debug_info = []
+            if case_debug_info["is_runtime_error"]:
+                debug_info.append(test_case_error_template_html.format(case_error=case_debug_info["error"]))
+            if "case_code" in case_debug_info:
+                debug_info.append(test_case_executed_code.format(
+                    case_code=case_debug_info["case_code"].replace("/n", "<br>")))
+            if not case_debug_info["is_runtime_error"]:
+                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>")
+                debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
+            case_data = {
+                "case_id": i,
+                "case_panel_id": "collapse_debug_test_%s_case_%s" % (str(test_id), str(i)),
+                "debug_info": ''.join(debug_info)
+            }
+            result_html.append(test_case_debug_info_template_html.format(**case_data))
+        result_html.append(test_results_template_html[1])
 
     result_html.append(test_name_template_html[1])
     result_html = ''.join(result_html).format(**template_info)
