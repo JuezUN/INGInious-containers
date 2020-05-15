@@ -1,8 +1,6 @@
-import subprocess
 import re
 import ast
 
-from results import GraderResult
 from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR, _run_in_sandbox, _parse_run_student_args
 from .utils import _run_command
 

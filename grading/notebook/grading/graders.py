@@ -6,10 +6,10 @@ This Notebook grader uses the its base container's modules (uncode container).
 """
 
 import html
-from collections import OrderedDict
 import re
 import json
 import traceback
+from collections import OrderedDict
 
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
@@ -17,7 +17,8 @@ from feedback_tools import Diff, set_feedback
 from submission_requests import SubmissionRequest
 
 from .notebook_project import get_notebook_factory
-from .utils import _generate_feedback_info, _result_to_html, _feedback_str_for_internal_error
+from .utils import _generate_feedback_info, _result_to_html, _feedback_str_for_internal_error, \
+    _generate_feedback_info_internal_error
 
 
 class NotebookGrader(BaseGrader):
@@ -76,22 +77,16 @@ class NotebookGrader(BaseGrader):
             project.build()
         except Exception as e:
             debug_info = dict(internal_error_output="Next exception was thrown:{}".format(str(e)))
-            feedback_info = {'global': {}, 'custom': {}}
-            feedback_str = _feedback_str_for_internal_error()
-            feedback_info['custom']['additional_info'] = json.dumps(debug_info)
-            feedback_info['global']['result'] = "failed"
-            feedback_info['grade'] = 0.0
-            feedback_info['global']['feedback'] = feedback_str
 
-            set_feedback(feedback_info)
+            set_feedback(_generate_feedback_info_internal_error(debug_info))
             return
 
         tests_results, debug_info = self._run_all_tests(project, tests, weights)
 
         # Check for errors in run
-        if GraderResult.INTERNAL_ERROR in tests_results:
-            feedback_str = _feedback_str_for_internal_error()
-
+        result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results]
+        if GraderResult.INTERNAL_ERROR in result_codes:
+            set_feedback(_generate_feedback_info_internal_error(debug_info))
         else:
             # Generate feedback string for tests
             feedbacklist = []
@@ -101,10 +96,10 @@ class NotebookGrader(BaseGrader):
                     _result_to_html(i, test_result, weights[i], show_debug_info))
             feedback_str = '\n\n'.join(feedbacklist)
 
-        feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
-        feedback_info['global']['feedback'] = feedback_str
+            feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
+            feedback_info['global']['feedback'] = feedback_str
 
-        set_feedback(feedback_info)
+            set_feedback(feedback_info)
 
     def _run_all_tests(self, project, tests, weights):
         """
@@ -176,8 +171,8 @@ class NotebookGrader(BaseGrader):
                 score = self._get_total_score_test_case(stdout)
                 cases_info = self._get_case_diff(stdout, test_name, total_cases)
                 is_runtime_error, found_grading_runtime_exception, cases_info_exception = self._check_exception(stdout,
-                                                                                                               test_name,
-                                                                                                               total_cases)
+                                                                                                                test_name,
+                                                                                                                total_cases)
                 # Merge results
                 for key, value in cases_info.items():
                     if key in cases_info_exception:

@@ -7,21 +7,27 @@ from results import GraderResult
 
 
 def _run_command(command, **additional_flags):
-    # try:
     completed_process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **additional_flags)
     stdout = completed_process.stdout.decode()
     stderr = completed_process.stderr.decode()
     return_code = completed_process.returncode
-    # except Exception as e:
-    #     return_code = GraderResult.INTERNAL_ERROR
-    #     stdout = ""
-    #     stderr = str(e)
     return return_code, stdout, stderr
 
 
 def _feedback_str_for_internal_error():
     return "**{}**: There was an error while running your notebook. Please submit again.\n\n".format(
         GraderResult.INTERNAL_ERROR.name)
+
+
+def _generate_feedback_info_internal_error(debug_info):
+    feedback_info = {'global': {}, 'custom': {}}
+    feedback_str = _feedback_str_for_internal_error()
+    feedback_info['custom']['additional_info'] = json.dumps(debug_info)
+    feedback_info['custom']['traceback'] = debug_info
+    feedback_info['global']['result'] = "failed"
+    feedback_info['grade'] = 0.0
+    feedback_info['global']['feedback'] = feedback_str
+    return feedback_info
 
 
 def _generate_feedback_info(grader_results, debug_info, weights, tests):
@@ -100,15 +106,12 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         href="#{case_panel_id}" aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
         <div class="collapse" id="{case_panel_id}">{debug_info}</div></li></ul>
         """
-    test_case_executed_code = """<strong>Executed code:</strong><pre>{case_code}</pre>"""
+    test_case_executed_code = '<strong>Executed code:</strong><pre class="language-python"><code ' \
+                              'class="language-python" data-language="python">{case_code}</code></pre>' \
+                              '<script>highlight_code();</script>'
 
     result_html = [test_name_template_html[0]]
-    # test_result_name = test_result["result"].name
     if cases_debug_info and show_debug_info:
-        # if test_result_name == "GRADING_RUNTIME_ERROR":
-        #     result_html.append(
-        #         "<br>There was an error while running your code.")
-        # else:
         result_html.append(test_results_template_html[0])
         for i, case_debug_info in cases_debug_info.items():
             debug_info = []
@@ -116,7 +119,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
                 debug_info.append(test_case_error_template_html.format(case_error=case_debug_info["error"]))
             if "case_code" in case_debug_info:
                 debug_info.append(test_case_executed_code.format(
-                    case_code=case_debug_info["case_code"].replace("/n", "<br>")))
+                    case_code=case_debug_info["case_code"].replace("{", "{{").replace("}", "}}")))
             if not case_debug_info["is_runtime_error"]:
                 case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>")
                 debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
