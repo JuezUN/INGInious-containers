@@ -1,8 +1,6 @@
-import subprocess
 import re
 import ast
 
-from results import GraderResult
 from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR, _run_in_sandbox, _parse_run_student_args
 from .utils import _run_command
 
@@ -31,12 +29,8 @@ class NotebookProjectFactory(ProjectFactory):
 
     def create_from_directory(self, directory=None):
         def build():
+            _convert_nb_to_python_script(self.notebook_path, self.filename)
             _copy_files_to_student_dir(self.notebook_path)
-            return_code, stdout, stderr = _convert_nb_to_python_script(self.notebook_path, self.filename)
-            if return_code != 0:
-                return GraderResult.INTERNAL_ERROR
-            else:
-                return return_code
 
         def run(input_file, **run_student_flags):
             sandbox_flags = _parse_run_student_args(**run_student_flags)
@@ -59,7 +53,7 @@ def _copy_files_to_student_dir(notebook_filepath):
 
 def _convert_nb_to_python_script(notebook_path, filename):
     # Extract the python code within the same folder where the code is located.
-    command = ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True"]
+    command = ["jupyter", "nbconvert", "--to", "script", notebook_path, "--TemplateExporter.exclude_markdown=True"]
     return_code, stdout, stderr = _run_command(command)
 
     python_script_path = "{}.py".format(filename)

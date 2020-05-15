@@ -5,20 +5,20 @@ the submission requests.
 This Notebook grader uses the its base container's modules (uncode container).
 """
 
-import subprocess
 import html
-from collections import OrderedDict
 import re
+import json
+import traceback
+from collections import OrderedDict
 
-import projects
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
-import graders_utils as gutils
 from submission_requests import SubmissionRequest
 
 from .notebook_project import get_notebook_factory
-from .utils import _generate_feedback_info, _result_to_html
+from .utils import _generate_feedback_info, _result_to_html, _feedback_str_for_internal_error, \
+    _generate_feedback_info_internal_error
 
 
 class NotebookGrader(BaseGrader):
@@ -71,22 +71,22 @@ class NotebookGrader(BaseGrader):
             filename and amount of test_cases.
             weights (list): List of integers describing the importance of each test
         """
-        project = self.create_project()
-        if not project:
-            # TODO: set internal error feedback
-            pass
-        return_code = project.build()
-        if return_code != 0:
-            # TODO: set internal error feedback
-            pass
+
+        try:
+            project = self.create_project()
+            project.build()
+        except Exception as e:
+            debug_info = dict(internal_error_output="Next exception was thrown:{}".format(str(e)))
+
+            set_feedback(_generate_feedback_info_internal_error(debug_info))
+            return
 
         tests_results, debug_info = self._run_all_tests(project, tests, weights)
 
-        # TODO: Catch exceptions an return INTERNAL ERROR
         # Check for errors in run
-        if GraderResult.COMPILATION_ERROR in tests_results:
-            compilation_output = debug_info.get("compilation_output", "")
-            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
+        result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results]
+        if GraderResult.INTERNAL_ERROR in result_codes:
+            set_feedback(_generate_feedback_info_internal_error(debug_info))
         else:
             # Generate feedback string for tests
             feedbacklist = []
@@ -96,10 +96,10 @@ class NotebookGrader(BaseGrader):
                     _result_to_html(i, test_result, weights[i], show_debug_info))
             feedback_str = '\n\n'.join(feedbacklist)
 
-        feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
-        feedback_info['global']['feedback'] = feedback_str
+            feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
+            feedback_info['global']['feedback'] = feedback_str
 
-        set_feedback(feedback_info)
+            set_feedback(feedback_info)
 
     def _run_all_tests(self, project, tests, weights):
         """
@@ -116,9 +116,7 @@ class NotebookGrader(BaseGrader):
         """
         tests_results = []
         debug_info = {}
-
         try:
-            project.build()
 
             debug_info["files_feedback"] = {}
             for i, test in enumerate(tests):
@@ -130,11 +128,11 @@ class NotebookGrader(BaseGrader):
                 tests_results.append({"result": grader_result, "total": test_total, "name": test_name,
                                       "cases": test_debug_info["cases_info"]})
 
-        except projects.BuildError as e:
-            debug_info["compilation_output"] = e.compilation_output
-
+        except Exception as e:
+            debug_info["internal_error_output"] = traceback.format_exc()
+            debug_info["files_feedback"] = {}
             tests_results = [{
-                "result": GraderResult.COMPILATION_ERROR,
+                "result": GraderResult.INTERNAL_ERROR,
                 "total": 0.0,
                 "name": test[0],
                 "cases": OrderedDict()
@@ -172,9 +170,9 @@ class NotebookGrader(BaseGrader):
             else:
                 score = self._get_total_score_test_case(stdout)
                 cases_info = self._get_case_diff(stdout, test_name, total_cases)
-                is_runtime_error, found_professor_code_exception, cases_info_exception = self._check_exception(stdout,
-                                                                                                               test_name,
-                                                                                                               total_cases)
+                is_runtime_error, found_grading_runtime_exception, cases_info_exception = self._check_exception(stdout,
+                                                                                                                test_name,
+                                                                                                                total_cases)
                 # Merge results
                 for key, value in cases_info.items():
                     if key in cases_info_exception:
@@ -184,8 +182,8 @@ class NotebookGrader(BaseGrader):
                         cases_info[key] = cases_info_exception[key]
 
                 if is_runtime_error:
-                    if found_professor_code_exception:
-                        result = GraderResult.INTERNAL_ERROR
+                    if found_grading_runtime_exception:
+                        result = GraderResult.GRADING_RUNTIME_ERROR
                     else:
                         result = GraderResult.RUNTIME_ERROR
                 elif score != weight:
@@ -261,7 +259,7 @@ class NotebookGrader(BaseGrader):
         to the python exceptions' name.
         """
         found_student_code_exception = False
-        found_professor_code_exception = False
+        found_grading_runtime_exception = False
         is_runtime_error = False
 
         lines = stdout.split('\n')
@@ -301,9 +299,9 @@ class NotebookGrader(BaseGrader):
                         cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": error}
                     else:
                         is_runtime_error = True
-                        found_professor_code_exception = True
-                        cases_info[str(case)] = {"is_internal_error": True, "error": line}
-        return is_runtime_error, found_professor_code_exception, cases_info
+                        found_grading_runtime_exception = True
+                        cases_info[str(case)] = {"is_runtime_error": True, "is_grading_error": True, "error": line}
+        return is_runtime_error, found_grading_runtime_exception, cases_info
 
     def _is_test_case_timeout(self, stdout):
         str_to_check = "# Error: evaluation exceeded"
