@@ -121,7 +121,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
                 debug_info.append(test_case_executed_code.format(
                     case_code=case_debug_info["case_code"].replace("{", "{{").replace("}", "}}")))
             if not case_debug_info["is_runtime_error"]:
-                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>")
+                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>").replace("<", "&lt;")
                 debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
             case_data = {
                 "case_id": i,

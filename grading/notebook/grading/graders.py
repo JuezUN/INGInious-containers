@@ -200,7 +200,7 @@ class NotebookGrader(BaseGrader):
         debug_info = {
             "test_filename": test_filename,
             "test_name": test_name,
-            "stdout": html.escape(stdout),
+            "stdout": html.escape(stdout.replace("<", "&lt;").replace(">", "&gt;")),
             "stderr": html.escape(stderr),
             "return_code": return_code,
             "cases_info": cases_info
