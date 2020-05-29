@@ -7,7 +7,6 @@ This Notebook grader uses the its base container's modules (uncode container).
 
 import html
 import re
-import json
 import traceback
 from collections import OrderedDict
 
@@ -17,8 +16,7 @@ from feedback_tools import Diff, set_feedback
 from submission_requests import SubmissionRequest
 
 from .notebook_project import get_notebook_factory
-from .utils import _generate_feedback_info, _result_to_html, _feedback_str_for_internal_error, \
-    _generate_feedback_info_internal_error
+from .utils import _generate_feedback_info, _result_to_html, _generate_feedback_info_internal_error
 
 
 class NotebookGrader(BaseGrader):
@@ -38,6 +36,7 @@ class NotebookGrader(BaseGrader):
         self.test_memory_limit = options.get("memory_limit", 50)
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
         self.show_debug_info_for = set(options.get("show_debug_info_for", []))
+        self.dataset = options.get("dataset", {"url": '', 'filename': ''})
 
     def create_project(self):
         """
@@ -52,6 +51,7 @@ class NotebookGrader(BaseGrader):
         project_factory = get_notebook_factory()
         project_factory.filename = self.filename
         project_factory.notebook_path = notebook_filepath
+        project_factory.dataset = self.dataset
         project_factory._additional_flags = ["--timeout", str(self.test_time_limit)]
 
         if request.problem_type == 'notebook_file':
@@ -117,7 +117,6 @@ class NotebookGrader(BaseGrader):
         tests_results = []
         debug_info = {}
         try:
-
             debug_info["files_feedback"] = {}
             for i, test in enumerate(tests):
                 test_name, test_filename, total_cases = test
@@ -241,6 +240,8 @@ class NotebookGrader(BaseGrader):
                     else:
                         case_output_diff += line[2:] + '/n'
 
+            if len(case_code) > 1:
+                case_code = case_code[1:]
             cases_info[str(case)] = {
                 "is_runtime_error": False,
                 "case_code": '\n'.join(case_code[1:]),

@@ -1,5 +1,6 @@
 import re
 import ast
+import requests
 
 from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR, _run_in_sandbox, _parse_run_student_args
 from .utils import _run_command
@@ -22,6 +23,7 @@ class NotebookProjectFactory(ProjectFactory):
         self._additional_flags = additional_flags if additional_flags is not None else []
         self.filename = None
         self.notebook_path = None
+        self.dataset = None
 
     # This method does not apply for notebooks.
     def create_from_code(self, code=None):
@@ -29,6 +31,7 @@ class NotebookProjectFactory(ProjectFactory):
 
     def create_from_directory(self, directory=None):
         def build():
+            _download_dataset(self.dataset["url"], self.dataset["filename"])
             _convert_nb_to_python_script(self.notebook_path, self.filename)
             _copy_files_to_student_dir(self.notebook_path)
 
@@ -40,6 +43,14 @@ class NotebookProjectFactory(ProjectFactory):
             return _run_in_sandbox(command, cwd="student/")
 
         return LambdaProject(run_function=run, build_function=build)
+
+
+def _download_dataset(url, filename):
+    if url and filename:
+        result = requests.get(url, allow_redirects=True)
+
+        with open(filename, 'wb') as file:
+            file.write(result.content)
 
 
 def _copy_files_to_student_dir(notebook_filepath):

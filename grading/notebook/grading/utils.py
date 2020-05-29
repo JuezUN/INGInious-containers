@@ -14,14 +14,14 @@ def _run_command(command, **additional_flags):
     return return_code, stdout, stderr
 
 
-def _feedback_str_for_internal_error():
-    return "**{}**: There was an error while running your notebook. Please submit again.\n\n".format(
-        GraderResult.INTERNAL_ERROR.name)
+def _feedback_str_for_internal_error(debug_info):
+    return "**{}**: There was an error while running your notebook.{}\n\n".format(
+        GraderResult.INTERNAL_ERROR.name, debug_info.get("internal_error_output", ""))
 
 
 def _generate_feedback_info_internal_error(debug_info):
     feedback_info = {'global': {}, 'custom': {}}
-    feedback_str = _feedback_str_for_internal_error()
+    feedback_str = _feedback_str_for_internal_error(debug_info)
     feedback_info['custom']['additional_info'] = json.dumps(debug_info)
     feedback_info['custom']['traceback'] = debug_info
     feedback_info['global']['result'] = "failed"
@@ -121,7 +121,7 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
                 debug_info.append(test_case_executed_code.format(
                     case_code=case_debug_info["case_code"].replace("{", "{{").replace("}", "}}")))
             if not case_debug_info["is_runtime_error"]:
-                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "<br>").replace("<", "&lt;")
+                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "\n").replace("<", "&lt;")
                 debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
             case_data = {
                 "case_id": i,
