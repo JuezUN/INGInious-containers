@@ -294,6 +294,8 @@ class NotebookGrader(BaseGrader):
                                         error_line = "in '{}'".format(error_line.split()[-1])
                                     break
                                 code_error.append(error_line.replace('{', '{{').replace('}', '}}'))
+                            if not code_error:
+                                code_error.append(line.replace('{', '{{').replace('}', '}}'))
                         except:
                             code_error = [line]
                         error = "{}\n...\n{}\n".format(traceback_str, '\n'.join(reversed(code_error)))

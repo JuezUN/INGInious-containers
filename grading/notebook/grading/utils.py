@@ -116,17 +116,20 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         for i, case_debug_info in cases_debug_info.items():
             debug_info = []
             if case_debug_info["is_runtime_error"]:
-                debug_info.append(test_case_error_template_html.format(case_error=case_debug_info["error"]))
+                debug_info.append(test_case_error_template_html.format(case_error=case_debug_info["error"]).
+                                  replace("{", "{{").replace("}", "}}"))
             if "case_code" in case_debug_info:
                 debug_info.append(test_case_executed_code.format(
                     case_code=case_debug_info["case_code"].replace("{", "{{").replace("}", "}}")))
             if not case_debug_info["is_runtime_error"]:
-                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "\n").replace("<", "&lt;")
-                debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff))
+                case_output_diff = case_debug_info["case_output_diff"].replace("/n", "\n").replace("<", "&lt;"). \
+                    replace("{", "{{").replace("}", "}}")
+                debug_info.append(test_case_wrong_answer_template_html.format(case_output_diff=case_output_diff.
+                                                                              replace("{", "{{").replace("}", "}}")))
             case_data = {
                 "case_id": i,
                 "case_panel_id": "collapse_debug_test_%s_case_%s" % (str(test_id), str(i)),
-                "debug_info": ''.join(debug_info)
+                "debug_info": ''.join(debug_info).replace("{", "{{").replace("}", "}}")
             }
             result_html.append(test_case_debug_info_template_html.format(**case_data))
         result_html.append(test_results_template_html[1])
