@@ -15,7 +15,7 @@ def _run_command(command, **additional_flags):
 
 
 def _feedback_str_for_internal_error(debug_info):
-    return "**{}**: There was an error while running your notebook.{}\n\n".format(
+    return "<br><strong>{}:</strong> There was an error while running your notebook: <br><pre>{}</pre><br>".format(
         GraderResult.INTERNAL_ERROR.name, debug_info.get("internal_error_output", ""))
 
 
@@ -26,7 +26,7 @@ def _generate_feedback_info_internal_error(debug_info):
     feedback_info['custom']['traceback'] = debug_info
     feedback_info['global']['result'] = "failed"
     feedback_info['grade'] = 0.0
-    feedback_info['global']['feedback'] = feedback_str
+    feedback_info['global']['feedback'] = html2rst(feedback_str)
     return feedback_info
 
 

@@ -2,7 +2,8 @@ import re
 import ast
 import requests
 
-from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR, _run_in_sandbox, _parse_run_student_args
+from projects import ProjectFactory, LambdaProject, CODE_WORKING_DIR, _run_in_sandbox, _parse_run_student_args, \
+    BuildError
 from .utils import _run_command
 
 
@@ -46,11 +47,14 @@ class NotebookProjectFactory(ProjectFactory):
 
 
 def _download_dataset(url, filename):
-    if url and filename:
-        result = requests.get(url, allow_redirects=True)
+    try:
+        if url and filename:
+            result = requests.get(url, allow_redirects=True)
 
-        with open(filename, 'wb') as file:
-            file.write(result.content)
+            with open(filename, 'wb') as file:
+                file.write(result.content)
+    except Exception as e:
+        raise BuildError("Failed downloading dataset, make sure the container has access to Internet.")
 
 
 def _copy_files_to_student_dir(notebook_filepath):

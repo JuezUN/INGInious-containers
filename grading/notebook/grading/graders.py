@@ -75,31 +75,31 @@ class NotebookGrader(BaseGrader):
         try:
             project = self.create_project()
             project.build()
+
+            tests_results, debug_info = self._run_all_tests(project, tests, weights)
+
+            # Check for errors in run
+            result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results]
+            if GraderResult.INTERNAL_ERROR in result_codes:
+                set_feedback(_generate_feedback_info_internal_error(debug_info))
+            else:
+                # Generate feedback string for tests
+                feedbacklist = []
+                for i, test_result in enumerate(tests_results):
+                    show_debug_info = i in self.show_debug_info_for
+                    feedbacklist.append(
+                        _result_to_html(i, test_result, weights[i], show_debug_info))
+                feedback_str = '\n\n'.join(feedbacklist)
+
+                feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
+                feedback_info['global']['feedback'] = feedback_str
+
+                set_feedback(feedback_info)
         except Exception as e:
-            debug_info = dict(internal_error_output="Next exception was thrown:{}".format(str(e)))
+            debug_info = dict(internal_error_output=str(e))
 
             set_feedback(_generate_feedback_info_internal_error(debug_info))
             return
-
-        tests_results, debug_info = self._run_all_tests(project, tests, weights)
-
-        # Check for errors in run
-        result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results]
-        if GraderResult.INTERNAL_ERROR in result_codes:
-            set_feedback(_generate_feedback_info_internal_error(debug_info))
-        else:
-            # Generate feedback string for tests
-            feedbacklist = []
-            for i, test_result in enumerate(tests_results):
-                show_debug_info = i in self.show_debug_info_for
-                feedbacklist.append(
-                    _result_to_html(i, test_result, weights[i], show_debug_info))
-            feedback_str = '\n\n'.join(feedbacklist)
-
-            feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
-            feedback_info['global']['feedback'] = feedback_str
-
-            set_feedback(feedback_info)
 
     def _run_all_tests(self, project, tests, weights):
         """
