@@ -9,7 +9,6 @@ import json
 import html
 import tempfile
 import projects
-import re
 from sys import getsizeof
 import gc
 
@@ -19,6 +18,7 @@ from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
+from .utils import remove_sockets_exception, cut_stderr
 
 
 class SimpleGrader(BaseGrader):
@@ -176,7 +176,8 @@ class SimpleGrader(BaseGrader):
             memory = self.memory_limit
             return_code, stdout, stderr = project.run(input_file,
                                                       **{"time": time, "memory": memory, "hard-time": hard_time})
-            stderr = self._remove_sockets_exception(stderr)
+            stderr = remove_sockets_exception(stderr)
+            stderr = cut_stderr(stderr)
             expected_output = expected_output_file.read()
             # In case the stdout takes more memory than the output limit. It sets the stdout to free up memory
             # and avoid memory leaks.
@@ -315,19 +316,6 @@ class SimpleGrader(BaseGrader):
         feedback_info['grade'] = 100.0 if feedback_info['global']['return'] == GraderResult.ACCEPTED else 0.0
 
         return feedback_info
-
-    def _remove_sockets_exception(self, stderr):
-        if not stderr:
-            return stderr
-        stderr = stderr.split('\n')
-        start_exception_regex = r"Exception ignored in: <bound method Socket\.__del__ of <zmq\.sugar\.socket\.Socket.*"
-        start_exception_index = len(stderr)
-        for i, line in enumerate(stderr):
-            if re.match(start_exception_regex, line):
-                start_exception_index = i
-                break
-
-        return "\n".join([line for i, line in enumerate(stderr) if i < start_exception_index])
 
     def _construct_compilation_error_feedback_info(self, error):
         """

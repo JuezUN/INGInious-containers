@@ -11,7 +11,6 @@ TO DO:
 
 import difflib
 import itertools
-import os
 import sys
 
 from graders_utils import reduce_text, html_to_rst as html2rst
@@ -55,7 +54,7 @@ class Diff:
         self.input_template = """<p>Input preview: {title_input}</p>
                                   <pre class="input-area" id="{block_id}-input">{input_text}</pre>
                                   <div id="{title_input}_download_link"></div>
-                                  <script>createDownloadLink("{title_input}", `{input_text_full}`);</script>
+                                  <script>createDownloadLink("{title_input}");</script>
                                   """
         self.diff_template = """<pre id="{block_id}"></pre>
                                 <script>updateDiffBlock("{block_id}", `{diff_result}`);</script>"""
@@ -74,7 +73,7 @@ class Diff:
             - expected_output (str): Second text given for the diff tool.
         """
         #  100 KBs will be the max length of stdout and expected output to calculate diff
-        _max_length = (2 ** 10) * 100
+        _max_length = (2 ** 10) * 800
         expected = reduce_text(expected_output, _max_length)
         expected = expected.split('\n')
         actual = reduce_text(actual_output, _max_length)
@@ -92,6 +91,9 @@ class Diff:
 
         if not end_of_diff_reached:
             diff_output += '\n...'
+
+        if diff_output is '':
+            diff_output = '\nDiff is too big and was clipped. The error might be in last lines.\n'
 
         return diff_output
 
@@ -118,7 +120,7 @@ class Diff:
         diff_result = debug_info.get("files_feedback", {}).get(input_filename, {}).get("diff", None)
         stderr = debug_info.get("files_feedback", {}).get(input_filename, {}).get("stderr", "")
         diff_available = diff_result is not None
-        input_text_full, input_text = self.read_input_example(test_case)
+        input_text = get_input_sample(test_case)
         template_info = {
             "test_id": test_id + 1,
             "result_name": result.name,
@@ -126,12 +128,11 @@ class Diff:
             "block_id": "diffBlock" + str(test_id),
             "input_text_id": "input_text_" + str(test_id),
             "input_text": input_text,
-            "input_text_full": escape_text(input_text_full),
             "title_input": test_case[0]
         }
         template = [self.toggle_debug_info_template[0]]
 
-        if self.show_input or input_text_full == "":
+        if self.show_input:
             template.append(self.input_template)
 
         if diff_available:
@@ -146,16 +147,22 @@ class Diff:
 
         return html2rst(diff_html)
 
-    def read_input_example(self, test_case):
-        """ This method reads and adds the input test text. """
-        statinfo = os.stat(test_case[0])
-        # size of input least than 1MB
-        if statinfo.st_size < 1048576:
-            with open(test_case[0], 'r') as input_file:
-                text = input_file.readlines()
-                return ["".join(text), "".join(text[:15])]
+
+def get_input_sample(test_case):
+    """ This method reads and gets an small sample of input that will be shown to students."""
+    max_lines = 15
+    max_length = 2 ** 10
+    with open(test_case[0], 'r') as input_file:
+        input_text = input_file.readlines()
+        if len(input_text) > max_lines:
+            input_sample = "".join(input_text[:max_lines])
         else:
-            return ["", "Input file oversize"]
+            input_sample = "".join(input_text)
+
+        if len(input_sample) > max_length:
+            return input_sample[:max_length]
+        else:
+            return input_sample
 
 
 def set_feedback(results):
