@@ -5,20 +5,18 @@ the submission requests.
 This Notebook grader uses the its base container's modules (uncode container).
 """
 
-import subprocess
 import html
-from collections import OrderedDict
 import re
+import traceback
+from collections import OrderedDict
 
-import projects
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
-import graders_utils as gutils
 from submission_requests import SubmissionRequest
 
 from .notebook_project import get_notebook_factory
-from .utils import _generate_feedback_info, _result_to_html
+from .utils import _generate_feedback_info, _result_to_html, _generate_feedback_info_internal_error
 
 
 class NotebookGrader(BaseGrader):
@@ -33,8 +31,12 @@ class NotebookGrader(BaseGrader):
     def __init__(self, submission_request, options):
         super(NotebookGrader, self).__init__(submission_request)
         self.filename = options.get("filename", "notebook")
+        self.test_time_limit = options.get("time_limit", 5)
+        self.test_hard_time_limit = options.get("hard_time_limit", 10)
+        self.test_memory_limit = options.get("memory_limit", 50)
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
         self.show_debug_info_for = set(options.get("show_debug_info_for", []))
+        self.dataset = options.get("dataset", {"url": '', 'filename': ''})
 
     def create_project(self):
         """
@@ -45,59 +47,20 @@ class NotebookGrader(BaseGrader):
             and can be given specific test cases for the grading of the source code
         """
         request = self.submission_request
+        notebook_filepath = "{}.ipynb".format(self.filename)
         project_factory = get_notebook_factory()
+        project_factory.filename = self.filename
+        project_factory.notebook_path = notebook_filepath
+        project_factory.dataset = self.dataset
+        project_factory._additional_flags = ["--timeout", str(self.test_time_limit)]
 
         if request.problem_type == 'notebook_file':
-            notebook_filepath = "{}.ipynb".format(self.filename)
             with open(notebook_filepath, "wb") as project_file:
                 project_file.write(request.code)
-
-            self._convert_nb_to_python_script(notebook_filepath)
-            self._copy_files_to_student_dir(notebook_filepath)
             project = project_factory.create_from_directory()
             return project
 
         return None
-
-    def _copy_files_to_student_dir(self, notebook_filepath):
-        files = subprocess.run(["ls"], cwd="/task/", stdout=subprocess.PIPE).stdout.decode("utf-8").split('\n')
-        no_copy_files = ["run", "task.yaml", notebook_filepath, "student"]
-        for file in files:
-            if file and file not in no_copy_files:
-                subprocess.run(["cp", "-r", file, "/task/student/"], cwd="/task/")
-
-    def _convert_nb_to_python_script(self, notebook_path):
-        # Extract the python code within the same folder where the code is located.
-        subprocess.run(
-            ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True"])
-        python_script_path = "{}.py".format(self.filename)
-        accepted_lines = ["import subprocess\n"]
-        get_ipython_pattern = r"get_ipython\(\)"
-        install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
-        shell_command_pattern = r"get_ipython\(\)\.system\(\'(.+?)\'\)"
-        comment_line_pattern = r"#.*"
-        with open(python_script_path, "r") as python_script:
-            lines = python_script.readlines()
-            for line in lines:
-                strip_line = line.strip()
-                if re.match(shell_command_pattern, strip_line) and not re.match(install_module_pattern, strip_line):
-                    try:
-                        shell_command = re.search(shell_command_pattern, strip_line).group(1).split()
-                        new_line = "call = subprocess.run({}, stdout=subprocess.PIPE)\n".format(shell_command)
-                        accepted_lines.append(new_line)
-                        new_line = "print(call.stdout.decode('utf-8'))\n"
-                        accepted_lines.append(new_line)
-                    except Exception:
-                        pass
-                    continue
-                elif re.match(get_ipython_pattern, strip_line) or re.match(comment_line_pattern,
-                                                                           strip_line) or not strip_line:
-                    continue
-
-                accepted_lines.append(line)
-
-        with open(python_script_path, "w") as python_script:
-            python_script.write(''.join(accepted_lines))
 
     def grade(self, tests, weights=None):
         """
@@ -108,27 +71,35 @@ class NotebookGrader(BaseGrader):
             filename and amount of test_cases.
             weights (list): List of integers describing the importance of each test
         """
-        project = self.create_project()
-        assert project is not None
-        tests_results, debug_info = self._run_all_tests(project, tests, weights)
 
-        # Check for errors in run
-        if GraderResult.COMPILATION_ERROR in tests_results:
-            compilation_output = debug_info.get("compilation_output", "")
-            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
-        else:
-            # Generate feedback string for tests
-            feedbacklist = []
-            for i, test_result in enumerate(tests_results):
-                show_debug_info = i in self.show_debug_info_for
-                feedbacklist.append(
-                    _result_to_html(i, test_result, weights[i], show_debug_info))
-            feedback_str = '\n\n'.join(feedbacklist)
+        try:
+            project = self.create_project()
+            project.build()
 
-        feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
-        feedback_info['global']['feedback'] = feedback_str
+            tests_results, debug_info = self._run_all_tests(project, tests, weights)
 
-        set_feedback(feedback_info)
+            # Check for errors in run
+            result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results]
+            if GraderResult.INTERNAL_ERROR in result_codes:
+                set_feedback(_generate_feedback_info_internal_error(debug_info))
+            else:
+                # Generate feedback string for tests
+                feedbacklist = []
+                for i, test_result in enumerate(tests_results):
+                    show_debug_info = i in self.show_debug_info_for
+                    feedbacklist.append(
+                        _result_to_html(i, test_result, weights[i], show_debug_info))
+                feedback_str = '\n\n'.join(feedbacklist)
+
+                feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
+                feedback_info['global']['feedback'] = feedback_str
+
+                set_feedback(feedback_info)
+        except Exception as e:
+            debug_info = dict(internal_error_output=str(e))
+
+            set_feedback(_generate_feedback_info_internal_error(debug_info))
+            return
 
     def _run_all_tests(self, project, tests, weights):
         """
@@ -145,10 +116,7 @@ class NotebookGrader(BaseGrader):
         """
         tests_results = []
         debug_info = {}
-
         try:
-            project.build()
-
             debug_info["files_feedback"] = {}
             for i, test in enumerate(tests):
                 test_name, test_filename, total_cases = test
@@ -159,11 +127,11 @@ class NotebookGrader(BaseGrader):
                 tests_results.append({"result": grader_result, "total": test_total, "name": test_name,
                                       "cases": test_debug_info["cases_info"]})
 
-        except projects.BuildError as e:
-            debug_info["compilation_output"] = e.compilation_output
-
+        except Exception as e:
+            debug_info["internal_error_output"] = traceback.format_exc()
+            debug_info["files_feedback"] = {}
             tests_results = [{
-                "result": GraderResult.COMPILATION_ERROR,
+                "result": GraderResult.INTERNAL_ERROR,
                 "total": 0.0,
                 "name": test[0],
                 "cases": OrderedDict()
@@ -184,28 +152,41 @@ class NotebookGrader(BaseGrader):
             the total grade for the test and the debug information in the execution.
         """
         test_name, test_filename, weight, total_cases = test
-
-        return_code, stdout, stderr = project.run(test_filename)
+        time = self.test_time_limit
+        hard_time = self.test_hard_time_limit
+        memory = self.test_memory_limit
+        sandbox_flags = {"time": time, "memory": memory, "hard-time": hard_time}
+        return_code, stdout, stderr = project.run(test_filename, **sandbox_flags)
         if self._is_test_case_timeout(stdout):
-            return_code, stdout, stderr = project.run(test_filename)
+            return_code, stdout, stderr = project.run(test_filename, **sandbox_flags)
 
         score = 0.0
         cases_info = {}
+
         if return_code == 0:
             if self._is_test_case_timeout(stdout):
                 result = GraderResult.TIME_LIMIT_EXCEEDED
             else:
                 score = self._get_total_score_test_case(stdout)
-                is_runtime_error, found_professor_code_exception, cases_info = self._check_exception(stdout, test_name,
-                                                                                                     total_cases)
+                cases_info = self._get_case_diff(stdout, test_name, total_cases)
+                is_runtime_error, found_grading_runtime_exception, cases_info_exception = self._check_exception(stdout,
+                                                                                                                test_name,
+                                                                                                                total_cases)
+                # Merge results
+                for key, value in cases_info.items():
+                    if key in cases_info_exception:
+                        cases_info[key] = {**value, **cases_info_exception[key]}
+                for key, value in cases_info_exception.items():
+                    if key not in cases_info:
+                        cases_info[key] = cases_info_exception[key]
+
                 if is_runtime_error:
-                    if found_professor_code_exception:
-                        result = GraderResult.INTERNAL_ERROR
+                    if found_grading_runtime_exception:
+                        result = GraderResult.GRADING_RUNTIME_ERROR
                     else:
                         result = GraderResult.RUNTIME_ERROR
                 elif score != weight:
                     result = GraderResult.WRONG_ANSWER
-                    cases_info.update(self._get_case_diff(stdout, test_name, total_cases))
                 else:
                     result = GraderResult.ACCEPTED
         else:
@@ -218,7 +199,7 @@ class NotebookGrader(BaseGrader):
         debug_info = {
             "test_filename": test_filename,
             "test_name": test_name,
-            "stdout": html.escape(stdout),
+            "stdout": html.escape(stdout.replace("<", "&lt;").replace(">", "&gt;")),
             "stderr": html.escape(stderr),
             "return_code": return_code,
             "cases_info": cases_info
@@ -244,26 +225,26 @@ class NotebookGrader(BaseGrader):
             case_error_index_start = lines.index(case_error_str)
             case_error_index_end = lines.index(case_error_str_end, case_error_index_start, len(lines))
             case_lines = lines[case_error_index_start:case_error_index_end]
-            case_code = ""
+            case_code = []
             case_output_diff = ""
             case_wrong_answer_str = "# Error: expected"
             if case_wrong_answer_str not in case_lines:
                 continue
 
-            student_code_import_str = "from %s import *" % self.filename
             for line in case_lines:
-
-                if line.startswith('>>> ') and student_code_import_str != line[4:]:
-                    case_code += line[4:] + '/n'
+                if line.startswith('>>> ') or line.startswith('... '):
+                    case_code.append(line[4:])
                 elif line.startswith("# "):
                     if line == case_wrong_answer_str:
                         case_output_diff += "Expected/n"
                     else:
                         case_output_diff += line[2:] + '/n'
 
+            if len(case_code) > 1:
+                case_code = case_code[1:]
             cases_info[str(case)] = {
                 "is_runtime_error": False,
-                "case_code": case_code,
+                "case_code": '\n'.join(case_code[1:]),
                 "case_output_diff": case_output_diff
             }
         return cases_info
@@ -279,7 +260,7 @@ class NotebookGrader(BaseGrader):
         to the python exceptions' name.
         """
         found_student_code_exception = False
-        found_professor_code_exception = False
+        found_grading_runtime_exception = False
         is_runtime_error = False
 
         lines = stdout.split('\n')
@@ -293,20 +274,37 @@ class NotebookGrader(BaseGrader):
             case_error_index_end = lines.index(case_error_str_end, case_error_index_start, len(lines))
             case_lines = lines[case_error_index_start:case_error_index_end]
             found_student_code_exception = False
-            for line in case_lines:
+            traceback_str = 'Traceback (most recent call last):'
+            traceback_index = 0
+            for index, line in enumerate(case_lines):
                 error_pattern = re.compile("[a-zA-Z]*Error.*")
-                if line.startswith('Traceback (most recent call last):'):
+                if line.startswith(traceback_str):
                     is_runtime_error = True
                     found_student_code_exception = True
+                    traceback_index = index
                 elif error_pattern.match(line) or line == "Exception":
                     # Look for the error that caused the student exception
                     if found_student_code_exception:
-                        cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": line}
+                        code_error = []
+                        try:
+                            for error_index in range(index, traceback_index - 1, -1):
+                                error_line = case_lines[error_index]
+                                if "File" in error_line:
+                                    if " in " in error_line:
+                                        error_line = "in '{}'".format(error_line.split()[-1])
+                                    break
+                                code_error.append(error_line.replace('{', '{{').replace('}', '}}'))
+                            if not code_error:
+                                code_error.append(line.replace('{', '{{').replace('}', '}}'))
+                        except:
+                            code_error = [line]
+                        error = "{}\n...\n{}\n".format(traceback_str, '\n'.join(reversed(code_error)))
+                        cases_info[str(case)] = {"is_runtime_error": is_runtime_error, "error": error}
                     else:
                         is_runtime_error = True
-                        found_professor_code_exception = True
-                        cases_info[str(case)] = {"is_internal_error": True, "error": line}
-        return is_runtime_error, found_professor_code_exception, cases_info
+                        found_grading_runtime_exception = True
+                        cases_info[str(case)] = {"is_runtime_error": True, "is_grading_error": True, "error": line}
+        return is_runtime_error, found_grading_runtime_exception, cases_info
 
     def _is_test_case_timeout(self, stdout):
         str_to_check = "# Error: evaluation exceeded"

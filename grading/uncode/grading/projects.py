@@ -452,4 +452,4 @@ def get_factory_from_name(name):
 
 def _parse_run_student_args(**kwargs):
     flags = [["--%s" % key.replace("_", '-'), "%s" % str(value)] for key, value in kwargs.items()]
-    return [value for flag in flags for value in flag]
+    return ['--share-network'] + [value for flag in flags for value in flag]
