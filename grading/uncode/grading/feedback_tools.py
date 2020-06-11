@@ -155,12 +155,12 @@ def get_input_sample(test_case):
     with open(test_case[0], 'r') as input_file:
         input_text = input_file.readlines()
         if len(input_text) > max_lines:
-            input_sample = "".join(input_text[:max_lines])
+            input_sample = "".join(input_text[:max_lines] + ['...\n'])
         else:
             input_sample = "".join(input_text)
 
         if len(input_sample) > max_length:
-            return input_sample[:max_length]
+            return input_sample[:max_length] + '...\n'
         else:
             return input_sample
 
