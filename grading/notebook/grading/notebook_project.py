@@ -89,17 +89,18 @@ def _remove_unwanted_lines(lines):
     result = ["import subprocess"]
     get_ipython_pattern = r"get_ipython\(\)"
     install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
-    shell_command_pattern = r"get_ipython\(\)\.system\(\'(.+?)\'\)"
+    shell_command_pattern = r"(\s*?)get_ipython\(\)\.system\(\'(.+?)\'\)(\s*)"
     comment_line_pattern = r"#.*"
     print_pattern = r".*print\(.*\).*"
     for line in lines:
         strip_line = line.strip()
-        if re.match(shell_command_pattern, strip_line) and not re.match(install_module_pattern, strip_line):
+        if re.match(shell_command_pattern, line) and not re.match(install_module_pattern, strip_line):
             try:
-                shell_command = re.search(shell_command_pattern, strip_line).group(1).split()
-                new_line = "call = subprocess.run({}, stdout=subprocess.PIPE)".format(shell_command)
+                whitespace_line = re.search(shell_command_pattern, line).group(1)
+                shell_command = re.search(shell_command_pattern, line).group(2).split()
+                new_line = "{}call = subprocess.run({}, stdout=subprocess.PIPE)".format(whitespace_line, shell_command)
                 result.append(new_line)
-                new_line = "print(call.stdout.decode('utf-8'))"
+                new_line = "{}print(call.stdout.decode('utf-8'))".format(whitespace_line)
                 result.append(new_line)
             except Exception as e:
                 pass
