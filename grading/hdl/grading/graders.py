@@ -38,14 +38,16 @@ class HDLGrader(BaseGrader):
         project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
 
         if self.submission_request.problem_type == 'code_multiple_languages':
+            # Define the names of the 3 files
+            file_names = {"students_code": "design", "testbench": "testbench", "teachers_code": "golden_model"}
             if language_name == 'verilog':
-                code_file_name = os.path.join(project_directory, "design.v")
-                testbench_temp_name = os.path.join(project_directory, "testbench.v")
-                golden_temp_name = os.path.join(project_directory, "golden_model.v")
+                code_file_name = os.path.join(project_directory, file_names["students_code"] + ".v")
+                testbench_temp_name = os.path.join(project_directory, file_names["testbench"] + ".v")
+                golden_temp_name = os.path.join(project_directory, file_names["teachers_code"] + ".v")
             elif language_name == 'vhdl':
-                code_file_name = os.path.join(project_directory, "design.vhd")
-                testbench_temp_name = os.path.join(project_directory, "testbench.vhd")
-                golden_temp_name = os.path.join(project_directory, "golden_model.vhd")
+                code_file_name = os.path.join(project_directory, file_names["students_code"] + ".vhd")
+                testbench_temp_name = os.path.join(project_directory, file_names["testbench"] + ".vhd")
+                golden_temp_name = os.path.join(project_directory, file_names["teachers_code"] + ".vhd")
 
             with open(code_file_name, "w+") as code_file:
                 code_file.write(self.submission_request.code)
@@ -53,9 +55,9 @@ class HDLGrader(BaseGrader):
                 copyfile(golden_file_name, golden_temp_name)
 
             if language_name == 'verilog':
-                return project_factory.create_from_directory(project_directory)
+                return project_factory.create_from_directory(project_directory, file_names)
             elif language_name == 'vhdl':
-                return project_factory.create_from_directory(project_directory, self.entity_name)
+                return project_factory.create_from_directory(project_directory, self.entity_name, file_names)
 
         if self.submission_request.problem_type == 'code_file_multiple_languages':
             project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
@@ -131,6 +133,7 @@ class HDLGrader(BaseGrader):
         if result != GraderResult.ACCEPTED:
             diff = None
             if self.generate_diff:
+                expected_output = stdout_golden
                 diff = self.diff_tool.compute(stdout, expected_output)
 
             debug_info.update({
