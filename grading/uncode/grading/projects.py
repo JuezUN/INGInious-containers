@@ -349,33 +349,29 @@ class VerilogProjectFactory(ProjectFactory):
     Implementation of project for verilog code
     """
 
-    def __init__(self, additional_flags=[]):
+    def __init__(self, additional_flags=None):
         """
         Initializes an instance of VerilogProjectFactory with the given options.
         """
-        self._additional_flags = additional_flags
+        self._additional_flags = additional_flags if additional_flags is not None else []
 
-    def create_from_code(self):
+    def create_from_code(self, code):
         pass
 
-    def create_from_directory(self, directory):
+    def create_from_directory(self, directory, file_names):
         def build():
-            golden_file = glob(os.path.join(os.path.abspath(directory), "*G.v"))
-            testbench_file = glob(os.path.join(os.path.abspath(directory), "*T.v"))
-            design_file = glob(os.path.join(os.path.abspath(directory), "*D.v"))
+            golden_file = os.path.join(os.path.abspath(directory), file_names["teachers_code"] + ".v")
+            testbench_file = os.path.join(os.path.abspath(directory), file_names["testbench"] + ".v")
+            design_file = os.path.join(os.path.abspath(directory), file_names["students_code"] + ".v")
 
             # Compile the testbench using the golden model
-            compilation_golden = ["iverilog", "-o", "golden.out"] + self._additional_flags
-            compilation_golden.extend(golden_file)
-            compilation_golden.extend(testbench_file)
+            compilation_golden = ["iverilog", "-o", "golden.out", testbench_file, golden_file] + self._additional_flags
             return_code, stdout, stderr = _run_in_sandbox(compilation_golden, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
 
             # Compile the testbench using the student's code
-            compilation_code = ["iverilog", "-o", "code.out"] + self._additional_flags
-            compilation_code.extend(testbench_file)
-            compilation_code.extend(design_file)
+            compilation_code = ["iverilog", "-o", "code.out", testbench_file, design_file] + self._additional_flags
             return_code, stdout, stderr = _run_in_sandbox(compilation_code, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
@@ -388,33 +384,59 @@ class VerilogProjectFactory(ProjectFactory):
             # Simulate using Icarus Verilog the testbench using the student's code
             run_command = ["vvp", "code.out"]
             # Return the stdout of the simulation of the golden model and the run in sandbox of the simulation of the
-            # code in evalutation
+            # code in evaluation
             return stdout_golden, _run_in_sandbox(run_command, cwd=directory)
 
         return LambdaProject(run_function=run, build_function=build)
 
 
 class VHDLProjectFactory(ProjectFactory):
-    def create_from_code(self):
+    def __init__(self, additional_flags=None):
+        """
+        Initializes an instance of VHDLProjectFactory with the given options.
+        """
+        self._additional_flags = additional_flags if additional_flags is not None else []
+
+    def create_from_code(self, code):
         pass
 
-    def create_from_directory(self, directory, testbench_file_name, entity_name):
+    def create_from_directory(self, directory, entity_name, file_names):
         def build():
-            source_files = glob(os.path.join(os.path.abspath(directory), "*.vhd"))
-            source_files = list(map(os.path.basename, source_files))
-            analyze_command = ["ghdl", "-a"] + source_files
-            return_code, stdout, stderr = _run_in_sandbox(analyze_command, cwd=directory)
+            testbench_file = os.path.join(os.path.abspath(directory), file_names["testbench"] + ".vhd")
+            design_file = os.path.join(os.path.abspath(directory), file_names["students_code"] + ".vhd")
+
+            # Analyze the testbench using the student's code
+            compilation_code = ["ghdl", "-a", testbench_file, design_file] + self._additional_flags
+            return_code, stdout, stderr = _run_in_sandbox(compilation_code, cwd=directory)
             if return_code != 0:
                 raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr)
-            compilation_command = ["ghdl", "-e", entity_name]
-            return_code, stdout, stderr = _run_in_sandbox(compilation_command, cwd=directory)
-            if return_code != 0:
-                raise BuildError(_get_compilation_message_from_return_code(return_code) + "\n" + stderr + str(
-                    analyze_command) + '\n' + str(compilation_command))
 
         def run(input_file=None, **run_student_flags):
-            run_command = ["ghdl -r ", entity_name]
-            return _run_in_sandbox(run_command, cwd=directory)
+            golden_file = os.path.join(os.path.abspath(directory), file_names["teachers_code"] + ".vhd")
+            testbench_file = os.path.join(os.path.abspath(directory), file_names["testbench"] + ".vhd")
+            design_file = os.path.join(os.path.abspath(directory), file_names["students_code"] + ".vhd")
+
+            # Simulate using GHDL the testbench using the golden model
+            run_command = ["ghdl", "-c", golden_file, testbench_file, "-r", entity_name]
+            return_code_golden, stdout_golden, stderr_golden = _run_in_sandbox(run_command, cwd=directory)
+            if return_code_golden != 0:
+                raise BuildError(_get_compilation_message_from_return_code(return_code_golden) + "\n" + stderr_golden)
+
+            # Simulate using GHDL the testbench using the student's code
+            run_command = ["ghdl", "-c", design_file, testbench_file, "-r", entity_name]
+            return_code_student, stdout_student, stderr_student = _run_in_sandbox(run_command, cwd=directory)
+
+            # GHDL output format is (always will have more than 6 fields split by ":"):
+            #   filename:#line:#column:time:kind_of_note:report_output
+            # It is only needed the report_output part (to have a similar stdout than in VerilogProjectFactory)
+            # so it is take from the 6 column to the end of line because report_output could contain ":"
+            stdout_golden = "\n".join([":".join(x.split(":")[5:]) for x in stdout_golden.split("\n")])
+
+            # For the student code only it's needed the report_output like in stdout_golden
+            stdout_student = "\n".join([":".join(x.split(":")[5:]) for x in stdout_student.split("\n")])
+            # Return the stdout of the simulation of the golden model
+            # and the run in sandbox of the simulation of the code in evaluation
+            return stdout_golden, (return_code_student, stdout_student, stderr_student)
 
         return LambdaProject(run_function=run, build_function=build)
 
