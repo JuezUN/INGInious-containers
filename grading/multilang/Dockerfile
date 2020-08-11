@@ -17,5 +17,5 @@ RUN     yum install -y gcc gcc-c++ gdb cpp make valgrind binutils libstdc++ clan
 RUN     yum clean all
 
 ADD     . /INGInious
-RUN     cp -R /INGInious/grading/.  /usr/lib/python3.5/site-packages/grading/
+RUN     cp -R /INGInious/grading/.  /usr/lib/python3.6/site-packages/grading/
 RUN     rm -R /INGInious
