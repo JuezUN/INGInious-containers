@@ -7,8 +7,8 @@ ADD     . /INGInious
 
 # Install grading library
 RUN     chmod -R 644 /INGInious/grading && \
-        mkdir -p /usr/lib/python3.5/site-packages/grading && \
-        cp -R /INGInious/grading/.  /usr/lib/python3.5/site-packages/grading/ && \
-        echo "grading" > /usr/lib/python3.5/site-packages/grading.pth
+        mkdir -p /usr/lib/python3.6/site-packages/grading && \
+        cp -R /INGInious/grading/.  /usr/lib/python3.6/site-packages/grading/ && \
+        echo "grading" > /usr/lib/python3.6/site-packages/grading.pth
 
 RUN     rm -R /INGInious

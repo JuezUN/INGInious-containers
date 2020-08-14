@@ -442,7 +442,6 @@ class VHDLProjectFactory(ProjectFactory):
 
 
 _ALL_FACTORIES = {
-    "python2": PythonProjectFactory(),
     "python3": PythonProjectFactory(python_binary='python3'),
     "java7": JavaProjectFactory(source_version="1.7",
                                 bootclasspath="/usr/lib/jvm/java-1.7.0-openjdk/jre/lib/rt.jar"),
