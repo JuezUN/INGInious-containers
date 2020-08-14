@@ -4,10 +4,10 @@ FROM    unjudge/uncode-c-base
 LABEL   org.inginious.grading.name="Notebook"
 
 # Add python modules and OK grading module
-RUN     pip3.5 install --upgrade pip
-RUN     pip3.5 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience \
+RUN     pip3 install --upgrade pip
+RUN     pip3 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience \
         plotly cufflinks bokeh tabulate nltk==3.4.5 tensorflow Keras
-RUN     pip3.5 install --no-cache-dir --upgrade okpy
+RUN     pip3 install --no-cache-dir --upgrade okpy
 
 # Download nltk data
 # RUN python3 -m nltk.downloader -d /usr/local/share/nltk_data all
@@ -17,5 +17,5 @@ RUN     chown -R worker:worker /root
 RUN     yum clean all
 
 ADD     . /INGInious
-RUN     cp -R /INGInious/grading/.  /usr/lib/python3.5/site-packages/grading/
+RUN     cp -R /INGInious/grading/.  /usr/lib/python3.6/site-packages/grading/
 RUN     rm -R /INGInious

@@ -4,6 +4,6 @@
 FROM    unjudge/inginious-c-multilang
 LABEL   org.inginious.grading.name="Data Science"
 
-RUN     pip3.5 install pandas numpy scipy scikit-learn datascience cufflinks tabulate nltk==3.4.5
+RUN     pip3 install pandas numpy scipy scikit-learn datascience cufflinks tabulate nltk==3.4.5
 
 RUN     yum clean all

@@ -12,5 +12,5 @@ RUN     rpm -ivh /iverilog.rpm && \
         rm /iverilog.rpm
 
 ADD     . /INGInious
-RUN     cp -R /INGInious/grading/. /usr/lib/python3.5/site-packages/grading/
+RUN     cp -R /INGInious/grading/. /usr/lib/python3.6/site-packages/grading/
 RUN     rm -R /INGInious
