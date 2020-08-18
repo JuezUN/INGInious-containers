@@ -244,7 +244,7 @@ class NotebookGrader(BaseGrader):
                 case_code = case_code[1:]
             cases_info[str(case)] = {
                 "is_runtime_error": False,
-                "case_code": '\n'.join(case_code[1:]),
+                "case_code": '\n'.join(case_code),
                 "case_output_diff": case_output_diff
             }
         return cases_info

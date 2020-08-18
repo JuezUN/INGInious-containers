@@ -100,7 +100,7 @@ def _remove_unwanted_lines(lines):
                 shell_command = re.search(shell_command_pattern, line).group(2).split()
                 new_line = "{}call = subprocess.run({}, stdout=subprocess.PIPE)".format(whitespace_line, shell_command)
                 result.append(new_line)
-                new_line = "{}print(call.stdout.decode('utf-8'))".format(whitespace_line)
+                new_line = "{}call.stdout.decode('utf-8')".format(whitespace_line)
                 result.append(new_line)
             except Exception as e:
                 pass
