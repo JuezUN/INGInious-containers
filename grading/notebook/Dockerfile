@@ -6,7 +6,7 @@ LABEL   org.inginious.grading.name="Notebook"
 # Add python modules and OK grading module
 RUN     pip3 install --upgrade pip
 RUN     pip3 install jupyter pandas numpy matplotlib scipy scikit-learn seaborn datascience \
-        plotly cufflinks bokeh tabulate nltk==3.4.5 tensorflow Keras
+        plotly cufflinks bokeh tabulate nltk==3.4.5 tensorflow Keras statsmodels
 RUN     pip3 install --no-cache-dir --upgrade okpy
 
 # Download nltk data
