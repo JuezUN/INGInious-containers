@@ -68,7 +68,9 @@ def _copy_files_to_student_dir(notebook_filepath):
 
 def _convert_nb_to_python_script(notebook_path, filename):
     # Extract the python code within the same folder where the code is located.
-    command = ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True"]
+    test_cells_regex = r"# TEST CELL\s*"  # Matches cells with the comment '# TEST CELL' followed 0 o more whitespaces.
+    command = ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True",
+               "--RegexRemovePreprocessor.patterns=['{}']".format(test_cells_regex)]
     return_code, stdout, stderr = _run_command(command)
 
     python_script_path = "{}.py".format(filename)
