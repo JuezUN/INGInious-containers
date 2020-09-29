@@ -12,12 +12,12 @@ env:
     - PROJECT_SANDBOX_FOLDER=/task/student
 
 install:
-  - git clone https://github.com/JuezUN/INGInious /tmp/inginious-main
-  - docker build -t ingi/inginious-c-base /tmp/inginious-main/base-containers/base  
+  - docker pull unjudge/inginious-c-base
+  - docker tag unjudge/inginious-c-base ingi/inginious-c-base
   - ./build-container.sh multilang
 
 script:
   - docker run -v $TRAVIS_BUILD_DIR/grading/base/inginious/:/python_lib/inginious
     -v $TRAVIS_BUILD_DIR/grading/multilang/grading/:/python_lib/grading
     -v $TRAVIS_BUILD_DIR/grading/multilang/tests/:/python_lib/tests
-    ingi/inginious-c-multilang /bin/sh -c "mkdir -p $PROJECT_SANDBOX_FOLDER; export PYTHONPATH=/python_lib:$PYTHONPATH; cd /python_lib && pip3.5 install pytest && pytest tests"
+    ingi/inginious-c-multilang /bin/sh -c "mkdir -p $PROJECT_SANDBOX_FOLDER; export PYTHONPATH=/python_lib:$PYTHONPATH; cd /python_lib && pip3 install pytest && pytest tests"
