@@ -2,7 +2,7 @@ sudo: required
 
 language: python
 python:
-  - 3.5
+  - 3.6
 
 services:
   - docker
@@ -17,7 +17,6 @@ install:
   - ./build-container.sh multilang
 
 script:
-  - docker run -v $TRAVIS_BUILD_DIR/grading/base/inginious/:/python_lib/inginious
-    -v $TRAVIS_BUILD_DIR/grading/multilang/grading/:/python_lib/grading
+  - docker run -v $TRAVIS_BUILD_DIR/grading/multilang/grading/:/python_lib/grading
     -v $TRAVIS_BUILD_DIR/grading/multilang/tests/:/python_lib/tests
     ingi/inginious-c-multilang /bin/sh -c "mkdir -p $PROJECT_SANDBOX_FOLDER; export PYTHONPATH=/python_lib:$PYTHONPATH; cd /python_lib && pip3 install pytest && pytest tests"
