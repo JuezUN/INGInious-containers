@@ -12,8 +12,6 @@ env:
     - PROJECT_SANDBOX_FOLDER=/task/student
 
 install:
-  - docker pull unjudge/inginious-c-base
-  - docker tag unjudge/inginious-c-base ingi/inginious-c-base
   - ./build-container.sh multilang
 
 script:
