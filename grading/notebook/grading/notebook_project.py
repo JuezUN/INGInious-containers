@@ -93,12 +93,19 @@ def _preprocess_code(python_script_path):
 
 
 def _remove_unwanted_lines(lines):
-    result = ["import subprocess"]
+    # code to block stdout from student's code.
+    stdout_code = """
+import sys
+class DummyFile(object):
+    def write(self, x): pass
+save_stdout = sys.stdout
+sys.stdout = DummyFile()
+"""
+    result = ["import subprocess"] + stdout_code.split('\n')
     get_ipython_pattern = r"get_ipython\(\)"
     install_module_pattern = r"get_ipython\(\)\.system\(\'(pip|conda) install .*\'\)"
     shell_command_pattern = r"(\s*?)get_ipython\(\)\.system\(\'(.+?)\'\)(\s*)"
     comment_line_pattern = r"#.*"
-    print_pattern = r".*print\(.*\).*"
     for line in lines:
         strip_line = line.strip()
         if re.match(shell_command_pattern, line) and not re.match(install_module_pattern, strip_line):
@@ -112,14 +119,14 @@ def _remove_unwanted_lines(lines):
             except Exception as e:
                 pass
             continue
-        elif re.match(print_pattern, line):
-            result.append(re.sub(r"print\(.*\)", "print('', end='')", line))
-            continue
         elif re.match(get_ipython_pattern, strip_line) \
                 or re.match(comment_line_pattern, strip_line) \
                 or not strip_line:
             continue
         result.append(line)
+
+    # Restore the stdout value to do not affect grading code.
+    result.append("sys.stdout = save_stdout")
     return '\n'.join(result)
 
 
