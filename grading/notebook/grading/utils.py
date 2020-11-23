@@ -73,7 +73,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     return feedback_info
 
 
-def _result_to_html(test_id, test_result, weight, show_debug_info):
+def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_feedback):
     cases_debug_info = test_result["cases"]
 
     template_info = {
@@ -98,6 +98,8 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
         "</div>"
     ]
 
+    test_custom_feedback_template_html = """<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"""
+
     test_case_error_template_html = """<strong>Error:</strong><br><pre>{case_error}</pre>"""
     test_case_wrong_answer_template_html = """
                                         <br><strong>Output difference:</strong><pre>{case_output_diff}</pre><br>"""
@@ -113,6 +115,9 @@ def _result_to_html(test_id, test_result, weight, show_debug_info):
     result_html = [test_name_template_html[0]]
     if cases_debug_info and show_debug_info:
         result_html.append(test_results_template_html[0])
+        if test_custom_feedback:
+            template_info['custom_feedback'] = test_custom_feedback
+            result_html.append(test_custom_feedback_template_html)
         for i, case_debug_info in cases_debug_info.items():
             debug_info = []
             if case_debug_info["is_runtime_error"]:
