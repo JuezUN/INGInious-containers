@@ -31,7 +31,7 @@ def reduce_text(text, max_size, additional_text=""):
     if getsizeof(text) <= max_size:
         return text
     else:
-        split_text = text.split('\n')
+        split_text = text.splitlines()
         new_text = []
         for s in split_text:
             new_text.append(s)
