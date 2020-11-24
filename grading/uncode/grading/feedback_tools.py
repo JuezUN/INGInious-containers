@@ -45,6 +45,7 @@ class Diff:
         self.diff_max_lines = options.get("diff_max_lines", 100)
         self.diff_context_lines = options.get("diff_context_lines", 3)
         self.output_diff_for = set(options.get("output_diff_for", []))
+        self.custom_feedback = options.get("custom_feedback", {})
         self.show_input = options.get('show_input', False)
 
         self.toggle_debug_info_template = ["""<ul><li><strong>Test {test_id}: {result_name} </strong>
@@ -58,6 +59,7 @@ class Diff:
                                   """
         self.diff_template = """<pre id="{block_id}"></pre>
                                 <script>updateDiffBlock("{block_id}", `{diff_result}`);</script>"""
+        self.custom_feedback_template = """<p>Custom feedback</p><pre>{custom_feedback}</pre><br>"""
         self.runtime_error_template = """<p>Error: </p><br><pre>{stderr}</pre>"""
 
         self.not_debug_info_template = """<ul><li><strong>Test {0}: {1} </strong></li></ul>"""
@@ -132,6 +134,10 @@ class Diff:
         }
         template = [self.toggle_debug_info_template[0]]
 
+        if input_filename in self.custom_feedback:
+            template_info["custom_feedback"] = self.custom_feedback[input_filename]
+            template.append(self.custom_feedback_template)
+
         if self.show_input:
             template.append(self.input_template)
 
@@ -142,6 +148,7 @@ class Diff:
         if GraderResult.RUNTIME_ERROR == result:
             template_info["stderr"] = stderr
             template.append(self.runtime_error_template)
+
         template.append(self.toggle_debug_info_template[1])
         diff_html = "".join(template).format(**template_info)
 
