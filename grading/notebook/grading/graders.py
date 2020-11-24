@@ -36,6 +36,7 @@ class NotebookGrader(BaseGrader):
         self.test_memory_limit = options.get("memory_limit", 50)
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
         self.show_debug_info_for = set(options.get("show_debug_info_for", []))
+        self.custom_feedback = options.get("custom_feedback", {})
         self.dataset = options.get("dataset", {"url": '', 'filename': ''})
 
     def create_project(self):
@@ -87,8 +88,9 @@ class NotebookGrader(BaseGrader):
                 feedbacklist = []
                 for i, test_result in enumerate(tests_results):
                     show_debug_info = i in self.show_debug_info_for
+                    test_custom_feedback = self.custom_feedback.get(i, "")
                     feedbacklist.append(
-                        _result_to_html(i, test_result, weights[i], show_debug_info))
+                        _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback))
                 feedback_str = '\n\n'.join(feedbacklist)
 
                 feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
