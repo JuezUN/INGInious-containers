@@ -62,7 +62,7 @@ class Diff:
 
         self.not_debug_info_template = """<ul><li><strong>Test {0}: {1} </strong></li></ul>"""
 
-    def compute(self, actual_output, expected_output):
+    def compute(self, current_output, expected_output):
         """
         Computes a diff between the program output and the expected output.
         This function will strip the diff to diff_max_lines, and provide a context of diff_context_lines
@@ -75,9 +75,9 @@ class Diff:
         #  100 KBs will be the max length of stdout and expected output to calculate diff
         _max_length = (2 ** 10) * 800
         expected = reduce_text(expected_output, _max_length)
-        expected = expected.split('\n')
-        actual = reduce_text(actual_output, _max_length)
-        actual = actual.split('\n')
+        expected = expected.splitlines()
+        actual = reduce_text(current_output, _max_length)
+        actual = actual.splitlines()
         diff_generator = difflib.unified_diff(expected, actual, n=self.diff_context_lines,
                                               fromfile='expected_output',
                                               tofile='your_output')
@@ -85,7 +85,8 @@ class Diff:
         # Remove file names (legend will be added in the frontend)
         start = 2
         diff_output = '\n'.join(itertools.islice(diff_generator, start,
-                                                 start + self.diff_max_lines if self.diff_max_lines is not None else sys.maxsize))
+                                                 start + self.diff_max_lines if
+                                                 self.diff_max_lines is not None else sys.maxsize))
 
         end_of_diff_reached = next(diff_generator, None) is None
 
@@ -184,4 +185,4 @@ def set_feedback(results):
 
 
 def escape_text(text):
-    return text.replace('\\', "\\\\").replace('`', "\\`").replace('\n', "\\n").replace("$", "\\$")
+    return text.replace('\\', "\\\\").replace('`', "\\`").replace('\n', "\\n").replace("$", "\\$").replace('\t', "\\t")
