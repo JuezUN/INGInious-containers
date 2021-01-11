@@ -337,4 +337,9 @@ def handle_problem_action(problem_id, tests, options={}, weights=None, language_
 
     sub_req = SubmissionRequest(problem_id, language_name)
     simple_grader = NotebookGrader(sub_req, options)
-    simple_grader.grade(tests, weights)
+    if sub_req.action == "submit":
+        simple_grader.grade(tests, weights)
+    elif sub_req.action == "customtest":
+        custom_tests = list(map(lambda x: x[0], sub_req.custom_input))
+        weights = list(map(lambda x: x[1], sub_req.custom_input))
+        simple_grader.grade(custom_tests, weights)
