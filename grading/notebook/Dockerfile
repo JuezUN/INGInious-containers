@@ -5,7 +5,7 @@ LABEL   org.inginious.grading.name="Notebook"
 
 # Add python modules and OK grading module
 RUN     pip3 install --upgrade pip
-RUN     pip3 install jupyter pandas==1.1.5 numpy==1.19.5 matplotlib==3.2.2 scipy==1.4.1 scikit-learn==0.22.2.post1 \
+RUN     pip3 install nbconvert==6.0.7 pandas==1.1.5 numpy==1.19.5 matplotlib==3.2.2 scipy==1.4.1 scikit-learn==0.22.2.post1 \
         seaborn==0.11.1 datascience==0.10.6 plotly==4.4.1 cufflinks bokeh==2.1.1 tabulate nltk==3.4.5 tensorflow==2.4.0 \
         Keras statsmodels==0.10.2 antlr4-python3-runtime
 RUN     pip3 install --no-cache-dir --upgrade okpy
