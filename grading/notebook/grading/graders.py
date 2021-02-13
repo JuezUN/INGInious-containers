@@ -80,13 +80,16 @@ class NotebookGrader(BaseGrader):
             tests_results, debug_info = self._run_all_tests(project, tests, weights)
 
             # Check for errors in run
-            result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results]
+            result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results if result]
             if GraderResult.INTERNAL_ERROR in result_codes:
                 set_feedback(_generate_feedback_info_internal_error(debug_info))
             else:
                 # Generate feedback string for tests
                 feedbacklist = []
                 for i, test_result in enumerate(tests_results):
+                    if not test_result:
+                        continue
+
                     show_debug_info = i in self.show_debug_info_for
                     test_custom_feedback = self.custom_feedback.get(i, "")
                     feedbacklist.append(
@@ -121,6 +124,10 @@ class NotebookGrader(BaseGrader):
         try:
             debug_info["files_feedback"] = {}
             for i, test in enumerate(tests):
+                if not test:
+                    tests_results.append(None)
+                    continue
+
                 test_name, test_filename, total_cases = test
                 (grader_result, test_total), test_debug_info = self._run_single_test(project, (
                     test_name, test_filename, weights[i], total_cases))
@@ -137,7 +144,7 @@ class NotebookGrader(BaseGrader):
                 "total": 0.0,
                 "name": test[0],
                 "cases": OrderedDict()
-            } for test in tests]
+            } for test in tests if test]
 
         return tests_results, debug_info
 
@@ -340,6 +347,6 @@ def handle_problem_action(problem_id, tests, options={}, weights=None, language_
     if sub_req.action == "submit":
         simple_grader.grade(tests, weights)
     elif sub_req.action == "customtest":
-        custom_tests = list(map(lambda x: x[0], sub_req.custom_input))
-        weights = list(map(lambda x: x[1], sub_req.custom_input))
+        custom_tests = [test[0] if test else None for test in sub_req.custom_input]
+        weights = [test[1] if test else 0 for test in sub_req.custom_input]
         simple_grader.grade(custom_tests, weights)

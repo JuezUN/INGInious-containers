@@ -44,6 +44,9 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
         filename and amount of test_cases.
     """
 
+    tests = [test for test in tests if test]
+    grader_results = [result for result in grader_results if result]
+
     if weights is None:
         weights = [1] * len(tests)
     results = [grader_result["result"] for grader_result in grader_results]
