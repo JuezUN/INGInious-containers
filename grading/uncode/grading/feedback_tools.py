@@ -103,7 +103,7 @@ class Diff:
         if not end_of_diff_reached:
             diff_output += "\n..."
 
-        if diff_output is "":
+        if diff_output == "":
             diff_output = "\n@@ Diff is too big and was clipped. The error might be in last lines.\n"
 
         return diff_output
