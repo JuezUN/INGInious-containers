@@ -74,15 +74,23 @@ class Diff:
             - actual_output (str): First text given for the diff tool.
             - expected_output (str): Second text given for the diff tool.
         """
-        #  100 KBs will be the max length of stdout and expected output to calculate diff
+        #  800 KBs will be the max length of stdout and expected output to calculate diff
         _max_length = (2 ** 10) * 800
-        expected = reduce_text(expected_output, _max_length)
-        expected = expected.splitlines()
-        actual = reduce_text(current_output, _max_length)
-        actual = actual.splitlines()
-        diff_generator = difflib.unified_diff(expected, actual, n=self.diff_context_lines,
-                                              fromfile='expected_output',
-                                              tofile='your_output')
+        expected_output = reduce_text(expected_output, _max_length)
+        expected_output_lines = expected_output.splitlines()
+        # In case the expected output has an end of line at the end, add it to the split lines.
+        if expected_output[-1] == '\n':
+            expected_output_lines.append("\n")
+
+        actual_output = reduce_text(current_output, _max_length)
+        actual_output_lines = actual_output.splitlines()
+        # In case the actual output has an end of line at the end, add it to the split lines.
+        if actual_output[-1] == '\n':
+            actual_output_lines.append("\n")
+
+        diff_generator = difflib.unified_diff(expected_output_lines, actual_output_lines, n=self.diff_context_lines,
+                                              fromfile="expected_output",
+                                              tofile="your_output")
 
         # Remove file names (legend will be added in the frontend)
         start = 2
@@ -93,10 +101,10 @@ class Diff:
         end_of_diff_reached = next(diff_generator, None) is None
 
         if not end_of_diff_reached:
-            diff_output += '\n...'
+            diff_output += "\n..."
 
-        if diff_output is '':
-            diff_output = '\n@@ Diff is too big and was clipped. The error might be in last lines.\n'
+        if diff_output is "":
+            diff_output = "\n@@ Diff is too big and was clipped. The error might be in last lines.\n"
 
         return diff_output
 
