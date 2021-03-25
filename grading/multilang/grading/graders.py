@@ -241,7 +241,7 @@ class SimpleGrader(BaseGrader):
         feedback_info['custom']['additional_info'] = json.dumps(debug_info)
         feedback_info['custom']['summary_result'] = summary_result.name
         feedback_info['global']['result'] = "success" if passing == len(test_cases) else "failed"
-        feedback_info['grade'] = score * 100.0 / total_sum
+        feedback_info['grade'] = (score * 100.0 / total_sum) if total_sum else 100
 
         return feedback_info
 
