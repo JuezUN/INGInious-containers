@@ -79,13 +79,13 @@ class Diff:
         expected_output = reduce_text(expected_output, _max_length)
         expected_output_lines = expected_output.splitlines()
         # In case the expected output has an end of line at the end, add it to the split lines.
-        if expected_output[-1] == '\n':
+        if expected_output and expected_output[-1] == '\n':
             expected_output_lines.append("\n")
 
         actual_output = reduce_text(current_output, _max_length)
         actual_output_lines = actual_output.splitlines()
         # In case the actual output has an end of line at the end, add it to the split lines.
-        if actual_output[-1] == '\n':
+        if actual_output and actual_output[-1] == '\n':
             actual_output_lines.append("\n")
 
         diff_generator = difflib.unified_diff(expected_output_lines, actual_output_lines, n=self.diff_context_lines,

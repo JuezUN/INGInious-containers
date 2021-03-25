@@ -71,7 +71,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     feedback_info['custom']['summary_result'] = summary_result.name
     feedback_info['custom']['internal_error'] = "\n".join(internal_errors)
     feedback_info['global']['result'] = "success" if passing == len(tests) else "failed"
-    feedback_info['grade'] = score * 100.0 / total_sum
+    feedback_info['grade'] = score * 100.0 / total_sum if total_sum > 0 else 100.0
 
     return feedback_info
 
