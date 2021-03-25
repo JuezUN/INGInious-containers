@@ -67,22 +67,24 @@ def _copy_files_to_student_dir(notebook_filepath):
 
 
 def _convert_nb_to_python_script(notebook_path, filename):
-    remove_cells_regex = [
-        "'%s'" % r"\s*#\s*TEST_CELL\s*",
-        "'%s'" % r"\s*#\s*IGNORE_CELL\s*",
-    ]  # Matches cells with the comment '#TEST_CELL' and '#IGNORE_CELL' which also accepts several whitespaces.
-    remove_cells = ','.join(remove_cells_regex)
+    try:
+        remove_cells_regex = [
+            "'%s'" % r"\s*#\s*TEST_CELL\s*",
+            "'%s'" % r"\s*#\s*IGNORE_CELL\s*",
+        ]  # Matches cells with the comment '#TEST_CELL' and '#IGNORE_CELL' which also accepts several whitespaces.
+        remove_cells = ','.join(remove_cells_regex)
 
-    # Extract the python code within the same folder where the code is located.
-    command = ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True",
-               "--RegexRemovePreprocessor.patterns=[{}]".format(remove_cells)]
-    return_code, stdout, stderr = _run_command(command)
+        # Extract the python code within the same folder where the code is located.
+        command = ["jupyter", "nbconvert", "--to", "python", notebook_path, "--TemplateExporter.exclude_markdown=True",
+                   "--RegexRemovePreprocessor.patterns=[{}]".format(remove_cells)]
+        _run_command(command)
 
-    python_script_path = "{}.py".format(filename)
-    processed_code = _preprocess_code(python_script_path)
-    with open(python_script_path, "w") as python_script:
-        python_script.write(processed_code)
-    return return_code, stdout, stderr
+        python_script_path = "{}.py".format(filename)
+        processed_code = _preprocess_code(python_script_path)
+        with open(python_script_path, "w") as python_script:
+            python_script.write(processed_code)
+    except Exception as e:
+        raise BuildError("Unexpected error while parsing the notebook. Check that your notebook runs correctly and try again.")
 
 
 def _preprocess_code(python_script_path):
