@@ -22,6 +22,7 @@ class SubmissionRequest:
         language_name (str): Language name of the student's code 
         problem_type (str): Type of the problem submission (in the UNCode case: multiple files or single file)
         custom_input (str): String containing the student's input in case of testing
+        penalty (float): Penalty value to be applied in student's final score
     """
 
     def __init__(self, problem_id, language_name=None):
@@ -43,6 +44,11 @@ class SubmissionRequest:
 
         code = input.get_input(problem_id)
 
+        try:
+            grade_penalty = input.get_input("penalty")[0]
+        except Exception:
+            grade_penalty = 0
+
         if language_name is None:
             language_name = input.get_input(problem_id + "/language")
         problem_type = input.get_input(problem_id + "/type")
@@ -56,3 +62,4 @@ class SubmissionRequest:
         self.language_name = language_name
         self.problem_type = problem_type
         self.custom_input = custom_input
+        self.penalty = grade_penalty

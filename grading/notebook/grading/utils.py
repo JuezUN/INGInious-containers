@@ -30,7 +30,7 @@ def _generate_feedback_info_internal_error(debug_info):
     return feedback_info
 
 
-def _generate_feedback_info(grader_results, debug_info, weights, tests):
+def _generate_feedback_info(grader_results, debug_info, weights, tests, grade_penalty):
     """
     This method generates a dictionary containing the information for the feedback
     setting function (check 'feedback_tools.py')
@@ -42,6 +42,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
         - weights (list): List of integers containing the importance of the nth-test
         - tests (list of tuples): A list containing a tuples with three values. The test's name, test's
         filename and amount of test_cases.
+        - grade_penalty (float): Value to be applied in grade
     """
 
     tests = [test for test in tests if test]
@@ -57,6 +58,9 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     score = sum(grades)
     total_sum = sum(weights)
 
+    final_grade = (score * 100.0 / total_sum) if total_sum > 0 else 100.0
+    final_grade = 0 if final_grade < grade_penalty else (final_grade - grade_penalty)
+
     summary_result = gutils.compute_summary_result(results)
 
     internal_errors = []
@@ -71,7 +75,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     feedback_info['custom']['summary_result'] = summary_result.name
     feedback_info['custom']['internal_error'] = "\n".join(internal_errors)
     feedback_info['global']['result'] = "success" if passing == len(tests) else "failed"
-    feedback_info['grade'] = score * 100.0 / total_sum if total_sum > 0 else 100.0
+    feedback_info['grade'] = final_grade
 
     return feedback_info
 

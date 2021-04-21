@@ -94,9 +94,10 @@ class NotebookGrader(BaseGrader):
                     test_custom_feedback = self.custom_feedback.get(i, "")
                     feedbacklist.append(
                         _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback))
+                grade_penalty = self.submission_request.penalty
                 feedback_str = '\n\n'.join(feedbacklist)
 
-                feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
+                feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests, grade_penalty)
                 feedback_info['global']['feedback'] = feedback_str
 
                 set_feedback(feedback_info)

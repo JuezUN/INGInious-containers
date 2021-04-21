@@ -123,8 +123,9 @@ class HDLGrader(BaseGrader):
         if return_code == 0:
             expected_output = stdout_golden
             correct = self.check_output(stdout, expected_output)
+            grade_penalty = self.submission_request.penalty;
             feedback_info['global']['result'] = "success" if correct else "failed"
-            feedback_info['grade'] = 100.0 if correct else 0.0
+            feedback_info['grade'] = (100.0 - grade_penalty) if correct else 0.0
             if correct:
                 result = GraderResult.ACCEPTED
 

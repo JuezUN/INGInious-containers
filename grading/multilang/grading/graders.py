@@ -85,6 +85,8 @@ class SimpleGrader(BaseGrader):
         project = self.create_project()
         results, debug_info = self._run_code_against_all_test_cases(project, test_cases)
 
+        grade_penalty = self.submission_request.penalty
+
         # Check for errors in run
         if GraderResult.COMPILATION_ERROR in results:
             compilation_output = debug_info.get("compilation_output", "")
@@ -97,7 +99,7 @@ class SimpleGrader(BaseGrader):
                 feedback_list.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
             feedback_str = '\n\n'.join(feedback_list)
 
-        feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
+        feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases, grade_penalty)
         feedback_info['global']['feedback'] = feedback_str
 
         set_feedback(feedback_info)
@@ -214,7 +216,7 @@ class SimpleGrader(BaseGrader):
 
             return result, debug_info
 
-    def _generate_feedback_info(self, results, debug_info, weights, test_cases):
+    def _generate_feedback_info(self, results, debug_info, weights, test_cases, grade_penalty):
         """
         This method generates a dictionary containing the information for the feedback
         setting function (check 'feedback_tools.py')
@@ -225,6 +227,7 @@ class SimpleGrader(BaseGrader):
             of the test cases.
             - weights (list): List of integers containing the importance of the nth-test
             - test_cases (list): List of pairs of filenames. i.e (input_filename, expected_output_filename)
+            - grade_penalty (float): Value to be applied in grade
         """
 
         if weights is None:
@@ -238,10 +241,13 @@ class SimpleGrader(BaseGrader):
 
         summary_result = gutils.compute_summary_result(results)
 
+        final_grade = (score * 100.0 / total_sum) if total_sum > 0 else 100.0
+        final_grade = 0 if final_grade < grade_penalty else (final_grade - grade_penalty)
+
         feedback_info['custom']['additional_info'] = json.dumps(debug_info)
         feedback_info['custom']['summary_result'] = summary_result.name
         feedback_info['global']['result'] = "success" if passing == len(test_cases) else "failed"
-        feedback_info['grade'] = (score * 100.0 / total_sum) if total_sum > 0 else 100.0
+        feedback_info['grade'] = final_grade
 
         return feedback_info
 
@@ -307,13 +313,14 @@ class SimpleGrader(BaseGrader):
                 "Your code did not run successfully: <strong>%s</strong>" % (feedback_info['global']['return'].name,))
         # Output length will be 80 KBs at most.
         _stdout_max_length = (2 ** 10) * 80
+
         feedback_info['custom']['stdout'] = gutils.reduce_text(stdout,
                                                                _stdout_max_length, "Long output, it was reduced.")
         feedback_info['custom']['stderr'] = remove_sockets_exception(stderr)
 
         feedback_info['global']['result'] = "success" if feedback_info['global'][
                                                              'return'] == GraderResult.ACCEPTED else "failed"
-        feedback_info['grade'] = 100.0 if feedback_info['global']['return'] == GraderResult.ACCEPTED else 0.0
+        feedback_info['grade'] = (100.0 - penalty) if feedback_info['global']['return'] == GraderResult.ACCEPTED else 0.0
 
         return feedback_info
 
