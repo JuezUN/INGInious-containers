@@ -44,10 +44,10 @@ class SubmissionRequest:
 
         code = input.get_input(problem_id)
 
-        try:
-            grade_penalty = input.get_input("penalty")[0]
-        except Exception:
-            grade_penalty = 0
+        grade_penalty = input.get_input("penalty")[0]
+
+        if grade_penalty is None:
+            grade_penalty = 0.0
 
         if language_name is None:
             language_name = input.get_input(problem_id + "/language")

@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 from results import GraderResult, parse_non_zero_return_code
 from base_grader import BaseGrader
-from feedback_tools import Diff, set_feedback
+from feedback_tools import Diff, set_feedback, feedback_penalty
 from submission_requests import SubmissionRequest
 
 from .notebook_project import get_notebook_factory
@@ -86,6 +86,10 @@ class NotebookGrader(BaseGrader):
             else:
                 # Generate feedback string for tests
                 feedbacklist = []
+
+                grade_penalty = self.submission_request.penalty
+                if(grade_penalty is not 0):
+                    feedbacklist.append(feedback_penalty(grade_penalty))
                 for i, test_result in enumerate(tests_results):
                     if not test_result:
                         continue
@@ -94,10 +98,10 @@ class NotebookGrader(BaseGrader):
                     test_custom_feedback = self.custom_feedback.get(i, "")
                     feedbacklist.append(
                         _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback))
-                grade_penalty = self.submission_request.penalty
-                feedback_str = '\n\n'.join(feedbacklist)
 
                 feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests, grade_penalty)
+
+                feedback_str = '\n\n'.join(feedbacklist)
                 feedback_info['global']['feedback'] = feedback_str
 
                 set_feedback(feedback_info)

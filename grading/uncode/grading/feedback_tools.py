@@ -201,3 +201,17 @@ def set_feedback(results):
 
 def escape_text(text):
     return text.replace('\\', "\\\\").replace('`', "\\`").replace('\n', "\\n").replace("$", "\\$").replace('\t', "\\t")
+
+
+def feedback_penalty(grade_penalty):
+
+    """
+    This method sets a new message for the grade penalty of a submission
+
+    Args:
+        - grade_penalty (float): The total penalty to be applied for the final grade
+    """
+
+    penalty_msg = '<br><br><p>A penalty of <b>{penalty}%</b> was applied to this submission.</p>'
+    penalty_msg = penalty_msg.format(penalty=grade_penalty)
+    return html2rst(penalty_msg)

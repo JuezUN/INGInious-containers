@@ -15,7 +15,7 @@ import gc
 from results import GraderResult, parse_non_zero_return_code, SandboxCodes
 from zipfile import ZipFile
 from base_grader import BaseGrader
-from feedback_tools import Diff, set_feedback
+from feedback_tools import Diff, set_feedback, feedback_penalty
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
 from .utils import remove_sockets_exception, cut_stderr
@@ -94,6 +94,8 @@ class SimpleGrader(BaseGrader):
         else:
             # Generate feedback string for tests
             feedback_list = []
+            feedback_list.append(feedback_penalty(grade_penalty))
+
             for i, result in enumerate(results):
                 test_case = test_cases[i]
                 feedback_list.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
