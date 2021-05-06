@@ -94,7 +94,9 @@ class SimpleGrader(BaseGrader):
         else:
             # Generate feedback string for tests
             feedback_list = []
-            feedback_list.append(feedback_penalty(grade_penalty))
+
+            if grade_penalty:
+                feedback_list.append(feedback_penalty(grade_penalty))
 
             for i, result in enumerate(results):
                 test_case = test_cases[i]
@@ -244,7 +246,9 @@ class SimpleGrader(BaseGrader):
         summary_result = gutils.compute_summary_result(results)
 
         final_grade = (score * 100.0 / total_sum) if total_sum > 0 else 100.0
-        final_grade = 0 if final_grade < grade_penalty else (final_grade - grade_penalty)
+
+        if grade_penalty:
+            final_grade = 0.0 if final_grade < grade_penalty else (final_grade - grade_penalty)
 
         feedback_info['custom']['additional_info'] = json.dumps(debug_info)
         feedback_info['custom']['summary_result'] = summary_result.name

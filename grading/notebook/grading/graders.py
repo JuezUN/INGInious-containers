@@ -88,7 +88,7 @@ class NotebookGrader(BaseGrader):
                 feedbacklist = []
 
                 grade_penalty = self.submission_request.penalty
-                if(grade_penalty is not 0):
+                if grade_penalty:
                     feedbacklist.append(feedback_penalty(grade_penalty))
                 for i, test_result in enumerate(tests_results):
                     if not test_result:

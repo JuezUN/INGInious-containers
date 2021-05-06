@@ -59,7 +59,9 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests, grade_pe
     total_sum = sum(weights)
 
     final_grade = (score * 100.0 / total_sum) if total_sum > 0 else 100.0
-    final_grade = 0 if final_grade < grade_penalty else (final_grade - grade_penalty)
+
+    if grade_penalty:
+        final_grade = 0.0 if final_grade < grade_penalty else (final_grade - grade_penalty)
 
     summary_result = gutils.compute_summary_result(results)
 

@@ -10,8 +10,7 @@ import projects
 from results import GraderResult, parse_non_zero_return_code
 from zipfile import ZipFile
 from base_grader import BaseGrader
-from graders_utils import html_to_rst as html2rst
-from feedback_tools import Diff, set_feedback
+from feedback_tools import Diff, set_feedback, feedback_penalty
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
 from shutil import copyfile
@@ -106,7 +105,12 @@ class HDLGrader(BaseGrader):
 
             result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(results)
             test_cases = (testbench_file_name, expected_output_name)
-            feedback_str = self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
+            feedback_str = ''
+            grade_penalty = self.submission_request.penalty
+            if grade_penalty:
+                feedback_str += feedback_penalty(grade_penalty)
+            feedback_str += self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
+
 
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)
@@ -123,9 +127,12 @@ class HDLGrader(BaseGrader):
         if return_code == 0:
             expected_output = stdout_golden
             correct = self.check_output(stdout, expected_output)
-            grade_penalty = self.submission_request.penalty;
+            grade_penalty = self.submission_request.penalty
+            final_grade = 100.0
+            if grade_penalty:
+                final_grade = 0.0 if final_grade < grade_penalty else final_grade - grade_penalty
             feedback_info['global']['result'] = "success" if correct else "failed"
-            feedback_info['grade'] = (100.0 - grade_penalty) if correct else 0.0
+            feedback_info['grade'] = final_grade if correct else 0.0
             if correct:
                 result = GraderResult.ACCEPTED
 
