@@ -108,7 +108,7 @@ class HDLGrader(BaseGrader):
 
             feedback_str = ''
             grade_penalty = self.submission_request.penalty
-            if feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and feedback_info['grade'] and grade_penalty):
+            if (feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and feedback_info['grade'])) and grade_penalty:
                 feedback_applied_penalty = feedback_penalty(grade_penalty)
                 feedback_str = feedback_applied_penalty
 

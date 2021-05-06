@@ -102,7 +102,7 @@ class SimpleGrader(BaseGrader):
 
         feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases, grade_penalty)
 
-        if feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and feedback_info['grade'] and grade_penalty):
+        if (feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and GraderResult.ACCEPTED in results)) and grade_penalty:
             feedback_applied_penalty = feedback_penalty(grade_penalty)
             feedback_str = feedback_applied_penalty + feedback_str
 
