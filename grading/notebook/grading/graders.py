@@ -88,8 +88,7 @@ class NotebookGrader(BaseGrader):
                 feedbacklist = []
 
                 grade_penalty = self.submission_request.penalty
-                if grade_penalty:
-                    feedbacklist.append(feedback_penalty(grade_penalty))
+
                 for i, test_result in enumerate(tests_results):
                     if not test_result:
                         continue
@@ -102,6 +101,11 @@ class NotebookGrader(BaseGrader):
                 feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests, grade_penalty)
 
                 feedback_str = '\n\n'.join(feedbacklist)
+
+                if feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and feedback_info['grade'] and grade_penalty):
+                    feedback_applied_penalty = feedback_penalty(grade_penalty)
+                    feedback_str = feedback_applied_penalty + feedback_str
+
                 feedback_info['global']['feedback'] = feedback_str
 
                 set_feedback(feedback_info)

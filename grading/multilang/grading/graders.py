@@ -95,15 +95,17 @@ class SimpleGrader(BaseGrader):
             # Generate feedback string for tests
             feedback_list = []
 
-            if grade_penalty:
-                feedback_list.append(feedback_penalty(grade_penalty))
-
             for i, result in enumerate(results):
                 test_case = test_cases[i]
                 feedback_list.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
             feedback_str = '\n\n'.join(feedback_list)
 
         feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases, grade_penalty)
+
+        if feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and feedback_info['grade'] and grade_penalty):
+            feedback_applied_penalty = feedback_penalty(grade_penalty)
+            feedback_str = feedback_applied_penalty + feedback_str
+
         feedback_info['global']['feedback'] = feedback_str
 
         set_feedback(feedback_info)

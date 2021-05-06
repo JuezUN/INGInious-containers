@@ -105,12 +105,14 @@ class HDLGrader(BaseGrader):
 
             result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(results)
             test_cases = (testbench_file_name, expected_output_name)
+
             feedback_str = ''
             grade_penalty = self.submission_request.penalty
-            if grade_penalty:
-                feedback_str += feedback_penalty(grade_penalty)
-            feedback_str += self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
+            if feedback_info['global']['result'] is 'success' or (feedback_info['global']['result'] is 'failed' and feedback_info['grade'] and grade_penalty):
+                feedback_applied_penalty = feedback_penalty(grade_penalty)
+                feedback_str = feedback_applied_penalty
 
+            feedback_str += self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
 
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)
