@@ -328,7 +328,7 @@ class SimpleGrader(BaseGrader):
 
         feedback_info['global']['result'] = "success" if feedback_info['global'][
                                                              'return'] == GraderResult.ACCEPTED else "failed"
-        feedback_info['grade'] = (100.0 - penalty) if feedback_info['global']['return'] == GraderResult.ACCEPTED else 0.0
+        feedback_info['grade'] = 100.0 if feedback_info['global']['return'] == GraderResult.ACCEPTED else 0.0
 
         return feedback_info
 

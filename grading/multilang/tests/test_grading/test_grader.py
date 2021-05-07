@@ -78,10 +78,10 @@ class TestGrader(object):
         sub_req = MagicMock()
         # Create temporal file for test cases pair        
         grader = SimpleGrader(sub_req, {'compute_diff': False})
-        feedback_info = grader._generate_feedback_info([GraderResult.ACCEPTED], {}, None, [('dummy', 'dummy')])
+        feedback_info = grader._generate_feedback_info([GraderResult.ACCEPTED], {}, None, [('dummy', 'dummy')], 0.0)
         assert feedback_info['grade'] == 100.0
         assert feedback_info['global']['result'] == 'success'
-        feedback_info = grader._generate_feedback_info([GraderResult.WRONG_ANSWER], {}, None, [('dummy', 'dummy')])
+        feedback_info = grader._generate_feedback_info([GraderResult.WRONG_ANSWER], {}, None, [('dummy', 'dummy')], 0.0)
         assert feedback_info['grade'] == 0.0
         assert feedback_info['global']['result'] == 'failed'
 
