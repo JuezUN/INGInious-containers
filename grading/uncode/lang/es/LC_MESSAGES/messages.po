@@ -27,8 +27,8 @@ msgid ""
 "Your code finished successfully. Check your output below\n"
 "."
 msgstr ""
-"El código finalizó satisfactoriamente. Revise la el resultado en la parte"
-" de abajo\n"
+"El código finalizó satisfactoriamente. Revise el resultado en la parte de"
+" abajo\n"
 "."
 
 #: grading/multilang/grading/graders.py:308
@@ -162,7 +162,7 @@ msgid ""
 "@@ Diff is too big and was clipped. The error might be in last lines.\n"
 msgstr ""
 "\n"
-"@@ La diferencia is muy grande y fue recortada. El error puede estar en "
+"@@ La diferencia es muy grande y fue recortada. El error puede estar en "
 "la últimas líneas.\n"
 
 #: grading/uncode/grading/graders_utils.py:14
@@ -175,11 +175,11 @@ msgstr ""
 
 #: grading/uncode/grading/projects.py:41
 msgid "The memory limit was exceeded during compilation."
-msgstr "La memoria límite fue excedida durante compilación."
+msgstr "La memoria límite fue excedida en tiempo de compilación."
 
 #: grading/uncode/grading/projects.py:43
 msgid "The time limit was exceeded during compilation."
-msgstr "El tiempo límite fue excedido durante compilación."
+msgstr "El tiempo límite fue excedido en tiempo compilación."
 
 #: grading/uncode/grading/projects.py:45
 msgid "Compilation failed."

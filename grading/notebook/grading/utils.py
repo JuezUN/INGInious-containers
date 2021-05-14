@@ -62,8 +62,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     internal_errors = []
     for test_feedback in debug_info["files_feedback"].values():
         cases_errors = [_("\t- Case {}: {}").format(i, case["error"]) for i, case in test_feedback["cases_info"].items()
-                        if
-                        "is_grading_error" in case]
+                        if "is_grading_error" in case]
         if cases_errors:
             internal_error = [test_feedback["test_name"]] + cases_errors
             internal_errors.append("\n".join(internal_error))
