@@ -38,13 +38,13 @@ def _get_compilation_message_from_return_code(return_code):
     result = parse_non_zero_return_code(return_code)
 
     if result == GraderResult.MEMORY_LIMIT_EXCEEDED:
-        return "The memory limit was exceeded during compilation."
+        return _("The memory limit was exceeded during compilation.")
     elif result == GraderResult.TIME_LIMIT_EXCEEDED:
-        return "The time limit was exceeded during compilation."
+        return _("The time limit was exceeded during compilation.")
     elif result in [GraderResult.INTERNAL_ERROR, GraderResult.RUNTIME_ERROR]:
-        return "Compilation failed."
+        return _("Compilation failed.")
     else:
-        raise AssertionError("Unhandled grader result: " + str(result))
+        raise AssertionError(_("Unhandled grader result: ") + str(result))
 
 
 class BuildError(Exception):
@@ -466,7 +466,7 @@ def get_factory_from_name(name):
     """
 
     if not factory_exists(name):
-        raise ValueError("Factory does not exist: " + name)
+        raise ValueError(_("Factory does not exist: ") + name)
 
     return _ALL_FACTORIES[name]
 

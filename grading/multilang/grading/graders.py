@@ -296,19 +296,21 @@ class SimpleGrader(BaseGrader):
             gc.collect()
             feedback_info['global']['return'] = GraderResult.OUTPUT_LIMIT_EXCEEDED
             feedback_info['global']['feedback'] = gutils.html_to_rst(
-                "Your code exceeded the output limit: <strong>%s</strong>" % feedback_info['global']['return'].name)
+                _("Your code exceeded the output limit") + ": <strong>%s</strong>" % feedback_info['global'][
+                    'return'].name)
         elif return_code == 0:
             feedback_info['global']['return'] = GraderResult.ACCEPTED
             feedback_info['global']['feedback'] = gutils.html_to_rst(
-                "Your code finished successfully. Check your output below\n.")
+                _("Your code finished successfully. Check your output below\n."))
         else:
             feedback_info['global']['return'] = parse_non_zero_return_code(return_code)
             feedback_info['global']['feedback'] = gutils.html_to_rst(
-                "Your code did not run successfully: <strong>%s</strong>" % (feedback_info['global']['return'].name,))
+                _("Your code did not run successfully") + ": <strong>%s</strong>" % (
+                    feedback_info['global']['return'].name,))
         # Output length will be 80 KBs at most.
         _stdout_max_length = (2 ** 10) * 80
         feedback_info['custom']['stdout'] = gutils.reduce_text(stdout,
-                                                               _stdout_max_length, "Long output, it was reduced.")
+                                                               _stdout_max_length, _("Long output, it was reduced."))
         feedback_info['custom']['stderr'] = remove_sockets_exception(stderr)
 
         feedback_info['global']['result'] = "success" if feedback_info['global'][
@@ -332,7 +334,7 @@ class SimpleGrader(BaseGrader):
         compilation_output = error.compilation_output
         feedback_info['global']['return'] = GraderResult.COMPILATION_ERROR
         feedback_info['global']['feedback'] = gutils.html_to_rst(
-            "Your code did not run successfully: <strong>%s</strong>, check the error below." %
+            _("Your code did not run successfully: <strong>%s</strong>, check the error below.") %
             feedback_info['global']['return'].name)
         feedback_info['global']['result'] = "failed"
         feedback_info['grade'] = 0.0
@@ -340,9 +342,6 @@ class SimpleGrader(BaseGrader):
         feedback_info['custom']['stderr'] = compilation_output
 
         return feedback_info
-
-
-# Problem Handler TODO: Change in future versions
 
 
 def handle_problem_action(problem_id, test_cases, options={}, weights=None, language_name=None):

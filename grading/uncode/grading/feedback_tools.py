@@ -50,16 +50,17 @@ class Diff:
 
         self.toggle_debug_info_template = ["""<ul><li><strong>Test {test_id}: {result_name} </strong>
                                     <a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
-                                    href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}"> Toggle diff</a>
-                                    <div class="collapse" id="{panel_id}">""", """</div></li></ul>"""]
-        self.input_template = """<p>Input preview: {title_input}</p>
+                                    href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">""" +
+                                           _("Toggle diff") + """</a> <div class="collapse" id="{panel_id}">""",
+                                           """</div></li></ul>"""]
+        self.input_template = _("""<p>Input preview: {title_input}</p>
                                   <pre class="input-area" id="{block_id}-input">{input_text}</pre>
                                   <div id="{title_input}_download_link"></div>
                                   <script>createDownloadLink("{title_input}");</script>
-                                  """
+                                  """)
         self.diff_template = """<pre id="{block_id}"></pre>
                                 <script>updateDiffBlock("{block_id}", `{diff_result}`);</script>"""
-        self.custom_feedback_template = """<p>Custom feedback</p><pre>{custom_feedback}</pre><br>"""
+        self.custom_feedback_template = _("""<p>Custom feedback</p><pre>{custom_feedback}</pre><br>""")
         self.runtime_error_template = """<p>Error: </p><br><pre>{stderr}</pre>"""
 
         self.not_debug_info_template = """<ul><li><strong>Test {0}: {1} </strong></li></ul>"""
@@ -104,7 +105,7 @@ class Diff:
             diff_output += "\n..."
 
         if diff_output == "":
-            diff_output = "\n@@ Diff is too big and was clipped. The error might be in last lines.\n"
+            diff_output = _("\n@@ Diff is too big and was clipped. The error might be in last lines.\n")
 
         return diff_output
 

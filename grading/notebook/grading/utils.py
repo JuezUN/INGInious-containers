@@ -15,7 +15,7 @@ def _run_command(command, **additional_flags):
 
 
 def _feedback_str_for_internal_error(debug_info):
-    return "<br><strong>{}:</strong> There was an error while running your notebook: <br><pre>{}</pre><br>".format(
+    return _("<br><strong>{}:</strong> There was an error while running your notebook: <br><pre>{}</pre><br>").format(
         GraderResult.INTERNAL_ERROR.name, debug_info.get("internal_error_output", ""))
 
 
@@ -61,7 +61,8 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
 
     internal_errors = []
     for test_feedback in debug_info["files_feedback"].values():
-        cases_errors = ["\t- Case {}: {}".format(i, case["error"]) for i, case in test_feedback["cases_info"].items() if
+        cases_errors = [_("\t- Case {}: {}").format(i, case["error"]) for i, case in test_feedback["cases_info"].items()
+                        if
                         "is_grading_error" in case]
         if cases_errors:
             internal_error = [test_feedback["test_name"]] + cases_errors
@@ -95,25 +96,25 @@ def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_f
     ]
     test_results_template_html = [
         """<a class="btn btn-default btn-link btn-xs" role="button"
-        data-toggle="collapse" href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">
-        Expand test results
-        </a><div class="collapse" id="{panel_id}">""",
+        data-toggle="collapse" href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">""" +
+        _("Expand test results") +
+        """</a><div class="collapse" id="{panel_id}">""",
         "</div>"
     ]
 
-    test_custom_feedback_template_html = """<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"""
+    test_custom_feedback_template_html = _("""<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>""")
 
     test_case_error_template_html = """<strong>Error:</strong><br><pre>{case_error}</pre>"""
-    test_case_wrong_answer_template_html = """
-                                        <br><strong>Output difference:</strong><pre>{case_output_diff}</pre><br>"""
-    test_case_debug_info_template_html = """<ul class="list_disc" style="font-size:12px; list-style-type: square;"><li>
+    test_case_wrong_answer_template_html = _("""
+                                        <br><strong>Output difference:</strong><pre>{case_output_diff}</pre><br>""")
+    test_case_debug_info_template_html = _("""<ul class="list_disc" style="font-size:12px; list-style-type: square;"><li>
         <strong>Case {case_id}:</strong><a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
         href="#{case_panel_id}" aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
         <div class="collapse" id="{case_panel_id}">{debug_info}</div></li></ul>
-        """
-    test_case_executed_code = '<strong>Executed code:</strong><pre class="language-python"><code ' \
-                              'class="language-python" data-language="python">{case_code}</code></pre>' \
-                              '<script>highlight_code();</script>'
+        """)
+    test_case_executed_code = _('<strong>Executed code:</strong><pre class="language-python"><code ' +
+                                'class="language-python" data-language="python">{case_code}</code></pre>' +
+                                '<script>highlight_code();</script>')
 
     result_html = [test_name_template_html[0]]
     if cases_debug_info and show_debug_info:

@@ -11,7 +11,7 @@ def html_to_rst(html):
 
 
 def feedback_str_for_compilation_error(compilation_output):
-    return "**Compilation error**:\n\n" + html_to_rst("<pre>%s</pre>" % (compilation_output,))
+    return _("**Compilation error**:\n\n") + html_to_rst("<pre>%s</pre>" % (compilation_output,))
 
 
 def compute_summary_result(results):

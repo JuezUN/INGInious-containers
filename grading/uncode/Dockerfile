@@ -11,4 +11,6 @@ RUN     chmod -R 644 /INGInious/grading && \
         cp -R /INGInious/grading/.  /usr/lib/python3.6/site-packages/grading/ && \
         echo "grading" > /usr/lib/python3.6/site-packages/grading.pth
 
+RUN     cp -r /INGInious/lang/ /usr/lib/python3.6/site-packages/grading/__lang/
+
 RUN     rm -R /INGInious
