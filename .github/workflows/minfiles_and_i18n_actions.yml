@@ -1,4 +1,4 @@
-name: Check minfiles and i18n
+name: Check i18n files
 on:
   pull_request:
     branches:
