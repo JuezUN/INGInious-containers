@@ -179,7 +179,7 @@ msgstr "La memoria límite fue excedida en tiempo de compilación."
 
 #: grading/uncode/grading/projects.py:43
 msgid "The time limit was exceeded during compilation."
-msgstr "El tiempo límite fue excedido en tiempo compilación."
+msgstr "El tiempo límite fue excedido en tiempo de compilación."
 
 #: grading/uncode/grading/projects.py:45
 msgid "Compilation failed."

@@ -20,5 +20,8 @@ def get_lang_dir_path():
 def init():
     """ Install gettext with the default parameters """
     if "_" not in builtins.__dict__:  # avoid installing lang two times
-        os.environ["LANGUAGE"] = inginious.input.get_lang()
+        try:
+            os.environ["LANGUAGE"] = inginious.input.get_lang()
+        except Exception:
+            os.environ["LANGUAGE"] = "en"
         gettext.install("messages", get_lang_dir_path())
