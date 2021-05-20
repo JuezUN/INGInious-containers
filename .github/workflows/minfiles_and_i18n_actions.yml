@@ -22,7 +22,7 @@ jobs:
           inserted=$((inserted + 0))
           deleted="$(git diff --numstat $file | cut -f2)"
           deleted=$((deleted + 0))
-          echo "$(git diff)"
+          echo "$(git diff --numstat)"
           if [ $inserted -gt 2 ] || [ $deleted -gt 2 ]; then
               echo "The translation files are not updated. Please update the translations files in grading/uncode/lang to merge this PR.";
               exit 1;
@@ -42,6 +42,7 @@ jobs:
           pybabel compile -d grading/uncode/lang
           total_changed="$(git diff --stat | wc -l)"
           total_changed=$((total_changed + 0))
+          echo "$(git diff --numstat)"
           if [ $total_changed -gt 0 ]; then
               echo "The translation files are not compiled. Run the compilation command to update them.";
               exit 1;
