@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  1.0\n"
 "Report-Msgid-Bugs-To: uncode_fibog@unal.edu.co\n"
-"POT-Creation-Date: 2021-05-13 22:25-0500\n"
+"POT-Creation-Date: 2021-05-19 19:00-0500\n"
 "PO-Revision-Date: 2021-05-13 18:59-0500\n"
 "Last-Translator: Cristian González <crdgonzalezca@unal.edu.co>\n"
 "Language: es\n"
@@ -76,17 +76,17 @@ msgstr ""
 msgid "\t- Case {}: {}"
 msgstr "\t- Caso {}: {}"
 
-#: grading/notebook/grading/utils.py:100
+#: grading/notebook/grading/utils.py:99
 msgid "Expand test results"
 msgstr "Expandir resultados del test"
 
-#: grading/notebook/grading/utils.py:105
+#: grading/notebook/grading/utils.py:104
 msgid "<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"
 msgstr ""
 "<br><strong>Retroalimentación "
 "personalizada:</strong><br><pre>{custom_feedback}</pre>"
 
-#: grading/notebook/grading/utils.py:108
+#: grading/notebook/grading/utils.py:107
 msgid ""
 "\n"
 "                                        <br><strong>Output "
@@ -96,7 +96,7 @@ msgstr ""
 "                                        <br><strong>Diferencia en la "
 "salida estándar:</strong><pre>{case_output_diff}</pre><br>"
 
-#: grading/notebook/grading/utils.py:110
+#: grading/notebook/grading/utils.py:109
 msgid ""
 "<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
 "square;\"><li>\n"
@@ -118,7 +118,7 @@ msgstr ""
 "id=\"{case_panel_id}\">{debug_info}</div></li></ul>\n"
 "        "
 
-#: grading/notebook/grading/utils.py:115
+#: grading/notebook/grading/utils.py:114
 msgid ""
 "<strong>Executed code:</strong><pre class=\"language-python\"><code class"
 "=\"language-python\" data-"

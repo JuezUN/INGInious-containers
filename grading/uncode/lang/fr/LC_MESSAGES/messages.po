@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-05-13 22:25-0500\n"
+"POT-Creation-Date: 2021-05-19 19:00-0500\n"
 "PO-Revision-Date: 2021-05-13 23:00-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -65,22 +65,22 @@ msgstr ""
 msgid "\t- Case {}: {}"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:100
+#: grading/notebook/grading/utils.py:99
 msgid "Expand test results"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:105
+#: grading/notebook/grading/utils.py:104
 msgid "<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:108
+#: grading/notebook/grading/utils.py:107
 msgid ""
 "\n"
 "                                        <br><strong>Output "
 "difference:</strong><pre>{case_output_diff}</pre><br>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:110
+#: grading/notebook/grading/utils.py:109
 msgid ""
 "<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
 "square;\"><li>\n"
@@ -93,7 +93,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: grading/notebook/grading/utils.py:115
+#: grading/notebook/grading/utils.py:114
 msgid ""
 "<strong>Executed code:</strong><pre class=\"language-python\"><code class"
 "=\"language-python\" data-"
