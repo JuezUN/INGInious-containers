@@ -1,16 +1,11 @@
-from inginious import input, feedback
-import json
 import os
-import difflib
 import html
 import tempfile
-from glob import glob
 
 import projects
 from results import GraderResult, parse_non_zero_return_code
 from zipfile import ZipFile
 from base_grader import BaseGrader
-from graders_utils import html_to_rst as html2rst
 from feedback_tools import Diff, set_feedback
 import graders_utils as gutils
 from submission_requests import SubmissionRequest

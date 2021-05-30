@@ -1,0 +1,31 @@
+name: Check i18n files
+on:
+  pull_request:
+    branches:
+      - master
+jobs:
+  check-i18n-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+          architecture: 'x64'
+      - name: Install python babel
+        run: |
+          sudo apt-get update
+          sudo apt-get install python-babel
+      - uses: actions/checkout@v2
+      - name: Check i18n files
+        run: |
+          pybabel extract -o messages.pot . && pybabel update -i messages.pot -d grading/uncode/lang
+          file="grading/uncode/lang/es/LC_MESSAGES/messages.po"
+          inserted="$(git diff --numstat $file | cut -f1)"
+          inserted=$((inserted + 0))
+          deleted="$(git diff --numstat $file | cut -f2)"
+          deleted=$((deleted + 0))
+          echo "$(git diff --numstat)"
+          if [ $inserted -gt 2 ] || [ $deleted -gt 2 ]; then
+              echo "The translation files are not updated. Please update the translations files in grading/uncode/lang to merge this PR.";
+              exit 1;
+          fi

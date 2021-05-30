@@ -53,8 +53,8 @@ def _download_dataset(url, filename):
 
             with open(filename, 'wb') as file:
                 file.write(result.content)
-    except Exception as e:
-        raise BuildError("Failed downloading dataset, make sure the container has access to Internet.")
+    except Exception:
+        raise BuildError(_("Failed downloading dataset, make sure the container has access to Internet."))
 
 
 def _copy_files_to_student_dir(notebook_filepath):
@@ -84,7 +84,8 @@ def _convert_nb_to_python_script(notebook_path, filename):
         with open(python_script_path, "w") as python_script:
             python_script.write(processed_code)
     except Exception as e:
-        raise BuildError("Unexpected error while parsing the notebook. Check that your notebook runs correctly and try again.")
+        raise BuildError(
+            _("Unexpected error while parsing the notebook. Check that your notebook runs correctly and try again."))
 
 
 def _preprocess_code(python_script_path):
@@ -118,7 +119,7 @@ sys.stdout = DummyFile()
                 result.append(new_line)
                 new_line = "{}call.stdout.decode('utf-8')".format(whitespace_line)
                 result.append(new_line)
-            except Exception as e:
+            except Exception:
                 pass
             continue
         elif re.match(get_ipython_pattern, strip_line) \

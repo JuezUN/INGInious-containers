@@ -27,7 +27,8 @@ The code related to this container is in the [main repository][base_container_gi
 ### [unjudge/uncode-c-base][unjudge/uncode-c-base_url]
 
 This container is not directly in charge of evaluating a student's submission, it contains code that all the other
- containers use to evaluate the submission in the correct environment. The code is in `grading/uncode`.
+ containers use to evaluate the submission in the correct environment. The code is in `grading/uncode`. This container
+ also contains the translations for different grading containers
 
 ### [unjudge/inginious-c-multilang][unjudge/inginious-c-multilang_url]
 
@@ -74,6 +75,42 @@ docker run -v <absolute_path_to_multilang>/grading/:/python_lib/grading \
 ```
 Where `<absolute_path_to_multilang>` is the absolute path the multilang container code, for instance: `/home/user/Desktop/INGInious-containers/grading/multilang`.
  It must be the absolute path, otherwise it will fail to start.
+ 
+### Translate messages
+
+It is possible to translate the messages returned from the containers. This adds support for internationalization (i18n). This is quite similar to the way it is done in the frontend.
+This is done using the module `gettext` which installs the function `_()` in python to make it accessible in all the code, also, the messages are extracted and compiled using `pybabel`.
+The i18n related files per language, are located in `grading/uncode/lang/`.
+
+**Note**: Every time a Pull Request is done to master, an automatic check is done to verify that the i18n files are up to date.
+
+#### 1. Mark a message as translatable
+
+To mark a message as translatable, use the function `_("Message to translate")`, which encloses the string to translate.
+
+#### 2. Extract marked messages
+
+To extract the marked messages as translatable from the files, run the next command.
+
+```bash
+pybabel extract -o messages.pot .
+```
+
+#### 3. Update messages 
+
+To update the messages files for each language, run the next command. After that, you can add translate the messages in the language you want to translate in `grading/uncode/lang/`.
+
+```bash
+pybabel update -i messages.pot -d grading/uncode/lang/
+```
+
+#### 4. Compile messages 
+
+Finally, the messages need to be compiled to correctly load the translations, run the next command:
+
+```bash
+pybabel compile  -d grading/uncode/lang/
+```
 
 ## Documentation
 

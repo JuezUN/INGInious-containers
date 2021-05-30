@@ -1,0 +1,195 @@
+# Spanish translations for UNCode.
+# Copyright (C) 2021 ORGANIZATION
+# This file is distributed under the same license as the  project.
+# UNCode, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version:  1.0\n"
+"Report-Msgid-Bugs-To: uncode_fibog@unal.edu.co\n"
+"POT-Creation-Date: 2021-05-19 19:00-0500\n"
+"PO-Revision-Date: 2021-05-13 18:59-0500\n"
+"Last-Translator: Cristian González <crdgonzalezca@unal.edu.co>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: grading/multilang/grading/graders.py:299
+msgid "Your code exceeded the output limit"
+msgstr "El código excedió el límite de salida estándar"
+
+#: grading/multilang/grading/graders.py:304
+msgid ""
+"Your code finished successfully. Check your output below\n"
+"."
+msgstr ""
+"El código finalizó satisfactoriamente. Revise el resultado en la parte de"
+" abajo\n"
+"."
+
+#: grading/multilang/grading/graders.py:308
+msgid "Your code did not run successfully"
+msgstr "El código no se ejecutó satisfactoriamente"
+
+#: grading/multilang/grading/graders.py:313
+msgid "Long output, it was reduced."
+msgstr "Salida estándar muy grande, fue reducida."
+
+#: grading/multilang/grading/graders.py:337
+#, python-format
+msgid ""
+"Your code did not run successfully: <strong>%s</strong>, check the error "
+"below."
+msgstr ""
+"El código no se ejecutó satisfactoriamente: <strong>%s</strong>, revise "
+"el error en la parte de abajo."
+
+#: grading/notebook/grading/notebook_project.py:57
+msgid ""
+"Failed downloading dataset, make sure the container has access to "
+"Internet."
+msgstr ""
+"Falló descargando el dataset, asegúrese que el contenedor tiene acceso a "
+"Internet."
+
+#: grading/notebook/grading/notebook_project.py:88
+msgid ""
+"Unexpected error while parsing the notebook. Check that your notebook "
+"runs correctly and try again."
+msgstr ""
+"Error inesperado mientras se analizaba el notebook. Revise que el "
+"notebook se ejecute correctamente y vuélvalo a intentar."
+
+#: grading/notebook/grading/utils.py:18
+msgid ""
+"<br><strong>{}:</strong> There was an error while running your notebook: "
+"<br><pre>{}</pre><br>"
+msgstr ""
+"<br><strong>{}:</strong> Hubo un error mientras se ejecutaba el notebook:"
+" <br><pre>{}</pre><br>"
+
+#: grading/notebook/grading/utils.py:64
+msgid "\t- Case {}: {}"
+msgstr "\t- Caso {}: {}"
+
+#: grading/notebook/grading/utils.py:99
+msgid "Expand test results"
+msgstr "Expandir resultados del test"
+
+#: grading/notebook/grading/utils.py:104
+msgid "<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"
+msgstr ""
+"<br><strong>Retroalimentación "
+"personalizada:</strong><br><pre>{custom_feedback}</pre>"
+
+#: grading/notebook/grading/utils.py:107
+msgid ""
+"\n"
+"                                        <br><strong>Output "
+"difference:</strong><pre>{case_output_diff}</pre><br>"
+msgstr ""
+"\n"
+"                                        <br><strong>Diferencia en la "
+"salida estándar:</strong><pre>{case_output_diff}</pre><br>"
+
+#: grading/notebook/grading/utils.py:109
+msgid ""
+"<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
+"square;\"><li>\n"
+"        <strong>Case {case_id}:</strong><a class=\"btn btn-default btn-"
+"link btn-xs\" role=\"button\" data-toggle=\"collapse\" \n"
+"        href=\"#{case_panel_id}\" aria-expanded=\"false\"aria-"
+"controls=\"{case_panel_id}\">Show debug info</a>\n"
+"        <div class=\"collapse\" "
+"id=\"{case_panel_id}\">{debug_info}</div></li></ul>\n"
+"        "
+msgstr ""
+"<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
+"square;\"><li>\n"
+"        <strong>Caso {case_id}:</strong><a class=\"btn btn-default btn-"
+"link btn-xs\" role=\"button\" data-toggle=\"collapse\" \n"
+"        href=\"#{case_panel_id}\" aria-expanded=\"false\"aria-"
+"controls=\"{case_panel_id}\">Mostrar información de depuración</a>\n"
+"        <div class=\"collapse\" "
+"id=\"{case_panel_id}\">{debug_info}</div></li></ul>\n"
+"        "
+
+#: grading/notebook/grading/utils.py:114
+msgid ""
+"<strong>Executed code:</strong><pre class=\"language-python\"><code class"
+"=\"language-python\" data-"
+"language=\"python\">{case_code}</code></pre><script>highlight_code();</script>"
+msgstr ""
+"<strong>Código ejecutado:</strong><pre class=\"language-python\"><code "
+"class=\"language-python\" data-"
+"language=\"python\">{case_code}</code></pre><script>highlight_code();</script>"
+
+#: grading/uncode/grading/feedback_tools.py:54
+msgid "Toggle diff"
+msgstr "Alternar panel de diferencias"
+
+#: grading/uncode/grading/feedback_tools.py:56
+msgid ""
+"<p>Input preview: {title_input}</p>\n"
+"                                  <pre class=\"input-area\" "
+"id=\"{block_id}-input\">{input_text}</pre>\n"
+"                                  <div "
+"id=\"{title_input}_download_link\"></div>\n"
+"                                  "
+"<script>createDownloadLink(\"{title_input}\");</script>\n"
+"                                  "
+msgstr ""
+"<p>Vista previa de la entrada: {title_input}</p>\n"
+"                                  <pre class=\"input-area\" "
+"id=\"{block_id}-input\">{input_text}</pre>\n"
+"                                  <div "
+"id=\"{title_input}_download_link\"></div>\n"
+"                                  "
+"<script>createDownloadLink(\"{title_input}\");</script>\n"
+"                                  "
+
+#: grading/uncode/grading/feedback_tools.py:63
+msgid "<p>Custom feedback</p><pre>{custom_feedback}</pre><br>"
+msgstr "<p>Retroalimentación personalizada</p><pre>{custom_feedback}</pre><br>"
+
+#: grading/uncode/grading/feedback_tools.py:108
+msgid ""
+"\n"
+"@@ Diff is too big and was clipped. The error might be in last lines.\n"
+msgstr ""
+"\n"
+"@@ La diferencia es muy grande y fue recortada. El error puede estar en "
+"la últimas líneas.\n"
+
+#: grading/uncode/grading/graders_utils.py:14
+msgid ""
+"**Compilation error**:\n"
+"\n"
+msgstr ""
+"**Error de compilación**:\n"
+"\n"
+
+#: grading/uncode/grading/projects.py:41
+msgid "The memory limit was exceeded during compilation."
+msgstr "La memoria límite fue excedida en tiempo de compilación."
+
+#: grading/uncode/grading/projects.py:43
+msgid "The time limit was exceeded during compilation."
+msgstr "El tiempo límite fue excedido en tiempo de compilación."
+
+#: grading/uncode/grading/projects.py:45
+msgid "Compilation failed."
+msgstr "La compilación falló."
+
+#: grading/uncode/grading/projects.py:47
+msgid "Unhandled grader result: "
+msgstr "Resultado no manejado: "
+
+#: grading/uncode/grading/projects.py:469
+msgid "Factory does not exist: "
+msgstr "El Factory no existe: "
+

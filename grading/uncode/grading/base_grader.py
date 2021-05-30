@@ -4,6 +4,7 @@ i.e (BaseGrader Class the interface for all Graders)
 """
 
 from abc import ABC, abstractmethod
+import i18n
 
 
 class BaseGrader(ABC):
@@ -26,6 +27,9 @@ class BaseGrader(ABC):
             about the submission made by the student
         """
         self.submission_request = submission_request
+
+        # Initialize the internationalization
+        i18n.init()
 
     @abstractmethod
     def create_project(self):
