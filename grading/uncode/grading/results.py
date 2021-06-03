@@ -13,8 +13,9 @@ class GraderResult(IntEnum):
     OUTPUT_LIMIT_EXCEEDED = 50
     GRADING_RUNTIME_ERROR = 60
     INTERNAL_ERROR = 70
-    WRONG_ANSWER = 80
-    ACCEPTED = 90
+    PRESENTATION_ERROR = 80
+    WRONG_ANSWER = 90
+    ACCEPTED = 100
 
 
 class SandboxCodes(IntEnum):

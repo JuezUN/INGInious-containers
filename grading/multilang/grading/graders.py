@@ -18,7 +18,7 @@ from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
-from .utils import remove_sockets_exception, cut_stderr
+from .utils import remove_sockets_exception, cut_stderr, is_presentation_error
 
 
 class SimpleGrader(BaseGrader):
@@ -44,6 +44,7 @@ class SimpleGrader(BaseGrader):
         self.hard_time_limit = options.get('hard_time_limit', self.time_limit)
         self.output_limit = options.get('output_limit', (2 ** 20) * 2)
         self.memory_limit = options.get('memory_limit', 50)
+        self.ignore_presentation_error = options.get("ignore_presentation_error", False)
 
     def create_project(self):
         """
@@ -188,7 +189,13 @@ class SimpleGrader(BaseGrader):
                 result = GraderResult.OUTPUT_LIMIT_EXCEEDED
             elif return_code == 0:
                 output_matches = self.check_output(stdout, expected_output)
-                result = GraderResult.ACCEPTED if output_matches else GraderResult.WRONG_ANSWER
+                if output_matches:
+                    result = GraderResult.ACCEPTED
+                elif is_presentation_error(stdout, expected_output):
+                    result = GraderResult.ACCEPTED if self.ignore_presentation_error else \
+                        GraderResult.PRESENTATION_ERROR
+                else:
+                    result = GraderResult.WRONG_ANSWER
             elif self.treat_non_zero_as_runtime_error:
                 result = parse_non_zero_return_code(return_code)
             else:
@@ -197,7 +204,9 @@ class SimpleGrader(BaseGrader):
             debug_info = {}
             if result != GraderResult.ACCEPTED:
                 diff = None
-                if self.generate_diff and result == GraderResult.WRONG_ANSWER and input_filename in self.output_diff_for:
+                if self.generate_diff and (result == GraderResult.WRONG_ANSWER or
+                                           result == GraderResult.PRESENTATION_ERROR) and \
+                        input_filename in self.output_diff_for:
                     diff = html.escape(self.diff_tool.compute(stdout, expected_output))
 
                 # As output might be very long, store string of max 50 KBs.

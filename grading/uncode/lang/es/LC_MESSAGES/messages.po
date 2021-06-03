@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  1.0\n"
 "Report-Msgid-Bugs-To: uncode_fibog@unal.edu.co\n"
-"POT-Creation-Date: 2021-05-19 19:00-0500\n"
+"POT-Creation-Date: 2021-06-03 00:27-0500\n"
 "PO-Revision-Date: 2021-05-13 18:59-0500\n"
 "Last-Translator: Cristian González <crdgonzalezca@unal.edu.co>\n"
 "Language: es\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: grading/multilang/grading/graders.py:299
+#: grading/multilang/grading/graders.py:308
 msgid "Your code exceeded the output limit"
 msgstr "El código excedió el límite de salida estándar"
 
-#: grading/multilang/grading/graders.py:304
+#: grading/multilang/grading/graders.py:313
 msgid ""
 "Your code finished successfully. Check your output below\n"
 "."
@@ -31,15 +31,15 @@ msgstr ""
 " abajo\n"
 "."
 
-#: grading/multilang/grading/graders.py:308
+#: grading/multilang/grading/graders.py:317
 msgid "Your code did not run successfully"
 msgstr "El código no se ejecutó satisfactoriamente"
 
-#: grading/multilang/grading/graders.py:313
+#: grading/multilang/grading/graders.py:322
 msgid "Long output, it was reduced."
 msgstr "Salida estándar muy grande, fue reducida."
 
-#: grading/multilang/grading/graders.py:337
+#: grading/multilang/grading/graders.py:346
 #, python-format
 msgid ""
 "Your code did not run successfully: <strong>%s</strong>, check the error "

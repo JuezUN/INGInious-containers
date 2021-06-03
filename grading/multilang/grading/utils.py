@@ -28,3 +28,37 @@ def cut_stderr(stderr):
 
     stderr_lines = stderr_lines[:max_lines // 2] + ['\t\t...'] + stderr_lines[-(max_lines // 2):]
     return "\n".join(stderr_lines)
+
+
+def is_presentation_error(stdout, expected_output):
+    """
+    Tokenize the texts by splitting the texts with multiple delimiters: space, \r, \t, and \n. Resulting empty strings
+    are ignored. That way, the comparison of the two generated lists is done only with the actual answers.
+
+    A presentation error is considered when the data in the output is correct, but it is not correctly formatted.
+    Therefore, both outputs, the `stdout` and `expected_output`, must have the same tokens.
+
+    The `stdout` is not considered presentation error in two cases:
+        1. The length of tokens is different to the total tokens from the expected output. This is probably a wrong
+            answer.
+        2. A token is different from the expected output.
+    :param stdout:
+    :param expected_output:
+    :return:
+    """
+    tokens_stdout = [token for token in re.split("[ \r\t\n]", stdout) if token]
+    tokens_expected_output = [token for token in re.split("[ \r\t\n]", expected_output) if token]
+
+    if len(tokens_stdout) != len(tokens_expected_output):
+        return False
+
+    idx_token_expected_output = 0
+    for token_stdout in tokens_stdout:
+        token_expected_output = tokens_expected_output[idx_token_expected_output]
+
+        if token_stdout != token_expected_output:
+            return False
+
+        idx_token_expected_output += 1
+
+    return True
