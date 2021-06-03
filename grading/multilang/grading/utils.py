@@ -32,6 +32,7 @@ def cut_stderr(stderr):
 
 def is_presentation_error(stdout, expected_output):
     """
+
     Tokenize the texts by splitting the texts with multiple delimiters: space, \r, \t, and \n. Resulting empty strings
     are ignored. That way, the comparison of the two generated lists is done only with the actual answers.
 
@@ -42,9 +43,9 @@ def is_presentation_error(stdout, expected_output):
         1. The length of tokens is different to the total tokens from the expected output. This is probably a wrong
             answer.
         2. A token is different from the expected output.
-    :param stdout:
-    :param expected_output:
-    :return:
+    :param stdout: the test case's output after running the code.
+    :param expected_output: expected output of the corresponding test case.
+    :return: Boolean value indicating if there is presentation error or not.
     """
     tokens_stdout = [token for token in re.split("[ \r\t\n]", stdout) if token]
     tokens_expected_output = [token for token in re.split("[ \r\t\n]", expected_output) if token]
