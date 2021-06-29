@@ -12,6 +12,7 @@ env:
     - PROJECT_SANDBOX_FOLDER=/task/student
 
 install:
+  - docker build -t unjudge/uncode-c-base ./grading/uncode
   - ./build-container.sh multilang
 
 script:

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-05-19 19:00-0500\n"
+"POT-Creation-Date: 2021-06-03 00:27-0500\n"
 "PO-Revision-Date: 2021-05-13 23:00-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -18,25 +18,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: grading/multilang/grading/graders.py:299
+#: grading/multilang/grading/graders.py:308
 msgid "Your code exceeded the output limit"
 msgstr ""
 
-#: grading/multilang/grading/graders.py:304
+#: grading/multilang/grading/graders.py:313
 msgid ""
 "Your code finished successfully. Check your output below\n"
 "."
 msgstr ""
 
-#: grading/multilang/grading/graders.py:308
+#: grading/multilang/grading/graders.py:317
 msgid "Your code did not run successfully"
 msgstr ""
 
-#: grading/multilang/grading/graders.py:313
+#: grading/multilang/grading/graders.py:322
 msgid "Long output, it was reduced."
 msgstr ""
 
-#: grading/multilang/grading/graders.py:337
+#: grading/multilang/grading/graders.py:346
 #, python-format
 msgid ""
 "Your code did not run successfully: <strong>%s</strong>, check the error "
