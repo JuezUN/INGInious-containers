@@ -1,6 +1,6 @@
 # UNCode containers
 
-[![Build Status](https://travis-ci.org/JuezUN/INGInious-containers.svg?branch=master)][travis_url]
+[![Build Status](https://travis-ci.com/JuezUN/INGInious-containers.svg?branch=master)][travis_url]
 [![License](https://img.shields.io/github/license/JuezUN/INGInious-containers?style=plastic)][license_url]
 [![Contributors](https://img.shields.io/github/contributors/JuezUN/INGInious-containers?style=plastic)][contributors_url]
 [![GitHub issues](https://img.shields.io/github/issues/JuezUN/INGInious-containers?style=plastic)][issues_url]
@@ -140,7 +140,7 @@ UNCode: <https://uncode.unal.edu.co>
 Project page: <https://juezun.github.io/>
 
 [license_url]: https://github.com/JuezUN/INGInious-containers/blob/master/LICENSE
-[travis_url]: https://travis-ci.org/JuezUN/INGInious-containers
+[travis_url]: https://travis-ci.com/github/JuezUN/INGInious-containers
 [codacy_url]: https://www.codacy.com/gh/JuezUN/INGInious-containers/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=JuezUN/INGInious-containers&amp;utm_campaign=Badge_Grade
 [uncode_url]: https://uncode.unal.edu.co/courselist
 [contributors_url]: https://github.com/JuezUN/INGInious-containers/graphs/contributors
