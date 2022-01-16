@@ -31,10 +31,11 @@ class NotebookProjectFactory(ProjectFactory):
         return
 
     def create_from_directory(self, directory=None):
-        def build():
-            _download_dataset(self.dataset["url"], self.dataset["filename"])
+        def build(rebuild=False):
             _convert_nb_to_python_script(self.notebook_path, self.filename)
-            _copy_files_to_student_dir(self.notebook_path)
+            if not rebuild:
+                _download_dataset(self.dataset["url"], self.dataset["filename"])
+                _copy_files_to_student_dir(self.notebook_path)
 
         def run(input_file, **run_student_flags):
             sandbox_flags = _parse_run_student_args(**run_student_flags)
