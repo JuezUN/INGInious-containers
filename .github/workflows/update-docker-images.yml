@@ -19,6 +19,7 @@ jobs:
         tags: latest
         registry: docker.io
         directory: ./grading/uncode
+        dockerfile: ./grading/uncode/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         
@@ -37,6 +38,7 @@ jobs:
         tags: latest
         registry: docker.io
         directory: ./grading/multilang
+        dockerfile: ./grading/multilang/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         
@@ -55,6 +57,7 @@ jobs:
         tags: latest
         registry: docker.io
         directory: ./grading/data_science
+        dockerfile: ./grading/data_science/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         
@@ -73,6 +76,7 @@ jobs:
         tags: latest
         registry: docker.io
         directory: ./grading/notebook
+        dockerfile: ./grading/notebook/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         
@@ -91,6 +95,7 @@ jobs:
         tags: latest
         registry: docker.io
         directory: ./grading/hdl
+        dockerfile: ./grading/hdl/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
   
