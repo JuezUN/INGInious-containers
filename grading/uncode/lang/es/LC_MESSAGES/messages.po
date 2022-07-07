@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  1.0\n"
 "Report-Msgid-Bugs-To: uncode_fibog@unal.edu.co\n"
-"POT-Creation-Date: 2021-12-14 21:19-0500\n"
+"POT-Creation-Date: 2021-06-03 00:27-0500\n"
 "PO-Revision-Date: 2021-05-13 18:59-0500\n"
 "Last-Translator: Cristian González <crdgonzalezca@unal.edu.co>\n"
 "Language: es\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.1\n"
+"Generated-By: Babel 2.8.0\n"
 
 #: grading/multilang/grading/graders.py:308
 msgid "Your code exceeded the output limit"
@@ -48,7 +48,7 @@ msgstr ""
 "El código no se ejecutó satisfactoriamente: <strong>%s</strong>, revise "
 "el error en la parte de abajo."
 
-#: grading/notebook/grading/notebook_project.py:58
+#: grading/notebook/grading/notebook_project.py:57
 msgid ""
 "Failed downloading dataset, make sure the container has access to "
 "Internet."
@@ -56,7 +56,7 @@ msgstr ""
 "Falló descargando el dataset, asegúrese que el contenedor tiene acceso a "
 "Internet."
 
-#: grading/notebook/grading/notebook_project.py:89
+#: grading/notebook/grading/notebook_project.py:88
 msgid ""
 "Unexpected error while parsing the notebook. Check that your notebook "
 "runs correctly and try again."
