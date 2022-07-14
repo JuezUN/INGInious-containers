@@ -1,0 +1,61 @@
+name: Docker Image Integrity Checking
+
+on:
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - grading/**
+
+jobs:
+  build-uncode-c-base:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker image uncode-c-base
+      run: docker build -t unjudge/uncode-c-base ./grading/uncode
+        
+  build-multilang:
+    needs: build-uncode-c-base
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker image unjudge/inginious-c-multilang
+      run: docker build -t unjudge/inginious-c-multilang ./grading/multilang
+        
+  build-and-push-data_science:
+    needs: build-multilang
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker image unjudge/inginious-c-data_science
+      run: docker build -t unjudge/inginious-c-data_science ./grading/data_science
+        
+  build-notebook:
+    needs: build-uncode-c-base
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Docker image unjudge/inginious-c-notebook
+      run: docker build -t unjudge/inginious-c-notebook ./grading/notebook
+        
+  build-and-push-hdl:
+    needs: build-uncode-c-base
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Docker image unjudge/hdl-uncode
+      run: docker build -t unjudge/hdl-uncode ./grading/hdl
