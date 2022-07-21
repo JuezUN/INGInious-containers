@@ -30,7 +30,7 @@ echo "- Building grading image: hdl"
 echo "-------------------------------------------------------"
 docker build -t "ingi/hdl-uncode" "grading/hdl"
 
-grading=( "notebook" "multilang" "data_science")
+grading=( "notebook" "multilang")
 
 for container in ${grading[@]}; do
         echo "-------------------------------------------------------"
@@ -39,4 +39,7 @@ for container in ${grading[@]}; do
         docker build -t "ingi/inginious-c-"$container"" "grading/"$container""
 done
 
-
+echo "-------------------------------------------------------"
+echo "- Building grading image: data_science"
+echo "-------------------------------------------------------"
+docker build -t "ingi/inginious-c-datascience" "grading/data_science"
