@@ -15,7 +15,7 @@ import gc
 from results import GraderResult, parse_non_zero_return_code, SandboxCodes
 from zipfile import ZipFile
 from base_grader import BaseGrader
-from feedback_tools import Diff, set_feedback
+from feedback_tools import Diff, set_feedback, get_input_sample
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
 from .utils import remove_sockets_exception, cut_stderr, is_presentation_error
@@ -44,6 +44,7 @@ class SimpleGrader(BaseGrader):
         self.hard_time_limit = options.get('hard_time_limit', self.time_limit)
         self.output_limit = options.get('output_limit', (2 ** 20) * 2)
         self.memory_limit = options.get('memory_limit', 50)
+        self.response_type = options.get('response_type','json')
         self.ignore_presentation_error = options.get("ignore_presentation_error", False)
 
     def create_project(self):
@@ -91,15 +92,39 @@ class SimpleGrader(BaseGrader):
             compilation_output = debug_info.get("compilation_output", "")
             feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
         else:
-            # Generate feedback string for tests
-            feedback_list = []
-            for i, result in enumerate(results):
-                test_case = test_cases[i]
-                feedback_list.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
-            feedback_str = '\n\n'.join(feedback_list)
-
-        feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
-        feedback_info['global']['feedback'] = feedback_str
+            # Generate feedback string for tests format based with response type
+            res_type = self.response_type
+            #Saving feedback as json
+            if res_type == 'json':
+                feedback_list_json = []
+                for i, result in enumerate(results):
+                    test_case = test_cases[i]
+                    feedback_obj = {
+                        "i": i,
+                        "result": result,
+                        "test_case": test_case,
+                        "input_sample": get_input_sample(test_case)
+                    }
+                    feedback_list_json.append(feedback_obj)
+                options_for_feedback = self.diff_tool.get_options_dict()
+                options_for_feedback["container_type"] = "multilang"
+                feedback_list_json.append(options_for_feedback)
+                feedback_list_json.append(debug_info)
+                feedback_str_json = json.dumps(feedback_list_json)
+                feedback_str = feedback_str_json
+            #Saving feedback as rst
+            elif res_type == 'rst':
+                feedback_list_rst = []
+            
+                for i, result in enumerate(results):
+                    test_case = test_cases[i]
+                    feedback_list_rst.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
+                    
+                feedback_str_rst = '\n\n'.join(feedback_list_rst)
+                feedback_str = feedback_str_rst
+                
+            feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
+            feedback_info['global']['feedback'] = feedback_str
 
         set_feedback(feedback_info)
 

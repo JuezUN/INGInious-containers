@@ -6,6 +6,7 @@ This Notebook grader uses the its base container's modules (uncode container).
 """
 
 import html
+import json
 import re
 import traceback
 from collections import OrderedDict
@@ -37,6 +38,7 @@ class NotebookGrader(BaseGrader):
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
         self.show_debug_info_for = set(options.get("show_debug_info_for", []))
         self.custom_feedback = options.get("custom_feedback", {})
+        self.response_type = options.get('response_type','json')
         self.dataset = options.get("dataset", {"url": '', 'filename': ''})
 
     def create_project(self):
@@ -85,16 +87,42 @@ class NotebookGrader(BaseGrader):
                 set_feedback(_generate_feedback_info_internal_error(debug_info))
             else:
                 # Generate feedback string for tests
-                feedbacklist = []
-                for i, test_result in enumerate(tests_results):
-                    if not test_result:
-                        continue
+                res_type = self.response_type
+                #Saving feedback as json
+                if res_type == 'json':
+                    feedback_list_json = []
+                    for i, test_result in enumerate(tests_results):
+                        if not test_result:
+                            continue
+                        show_debug_info = i in self.show_debug_info_for
+                        test_custom_feedback = self.custom_feedback.get(i, "")
+                        
+                        feedback_obj = {
+                            "i": i,
+                            "test_result": test_result,
+                            "weights": weights[i],
+                            "show_debug_info": show_debug_info,
+                            "test_custom_feedback": test_custom_feedback
+                        }
+                        feedback_list_json.append(feedback_obj)
+                    options_for_feedback = self.diff_tool.get_options_dict()
+                    options_for_feedback["container_type"] = "notebook"
+                    feedback_list_json.append(options_for_feedback)
+                    feedback_list_json.append(debug_info)
+                    feedback_str_json = json.dumps(feedback_list_json)
+                    feedback_str = feedback_str_json
+                #Saving feedback as rst
+                elif res_type == 'rst':
+                    feedback_list_rst = []
+                    for i, test_result in enumerate(tests_results):
+                        if not test_result:
+                            continue
 
-                    show_debug_info = i in self.show_debug_info_for
-                    test_custom_feedback = self.custom_feedback.get(i, "")
-                    feedbacklist.append(
-                        _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback))
-                feedback_str = '\n\n'.join(feedbacklist)
+                        show_debug_info = i in self.show_debug_info_for
+                        test_custom_feedback = self.custom_feedback.get(i, "")
+                        feedback_list_rst.append(
+                            _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback))
+                    feedback_str = '\n\n'.join(feedback_list_rst)
 
                 feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)
                 feedback_info['global']['feedback'] = feedback_str
