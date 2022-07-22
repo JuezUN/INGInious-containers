@@ -11,7 +11,7 @@ for container in "${grading[@]}"; do
 done
 
 echo "-------------------------------------------------------"
-echo "- Destroing grading image: hdl"
+echo "- Destroying grading image: hdl"
 echo "-------------------------------------------------------"
 docker rmi -f ingi/hdl-uncode
 echo "-------------------------------------------------------"
