@@ -188,7 +188,6 @@ class NotebookGrader(BaseGrader):
             The result of the execution of the student's source code in the specific test (i.e. RUNTIME_ERROR) with
             the total grade for the test and the debug information in the execution.
         """
-        project.build(rebuild=True)
         test_name, test_filename, weight, total_cases = test
         time = self.test_time_limit
         hard_time = self.test_hard_time_limit

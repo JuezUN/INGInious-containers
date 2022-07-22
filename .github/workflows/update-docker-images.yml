@@ -1,0 +1,101 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+
+  build-and-push-uncode-c-base:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: mr-smithers-excellent/docker-build-push@v5
+      name: Build & push Docker image uncode-c-base
+      with:
+        image: unjudge/uncode-c-base
+        tags: latest
+        registry: docker.io
+        directory: ./grading/uncode
+        dockerfile: ./grading/uncode/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+  build-and-push-multilang:
+    needs: build-and-push-uncode-c-base
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: mr-smithers-excellent/docker-build-push@v5
+      name: Build & push Docker image multilang
+      with:
+        image: unjudge/inginious-c-multilang
+        tags: latest
+        registry: docker.io
+        directory: ./grading/multilang
+        dockerfile: ./grading/multilang/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+  build-and-push-data_science:
+    needs: build-and-push-multilang
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: mr-smithers-excellent/docker-build-push@v5
+      name: Build & push Docker image data_science
+      with:
+        image: unjudge/inginious-c-datascience
+        tags: latest
+        registry: docker.io
+        directory: ./grading/data_science
+        dockerfile: ./grading/data_science/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+  build-and-push-notebook:
+    needs: build-and-push-uncode-c-base
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: mr-smithers-excellent/docker-build-push@v5
+      name: Build & push Docker image notebook
+      with:
+        image: unjudge/inginious-c-notebook
+        tags: latest
+        registry: docker.io
+        directory: ./grading/notebook
+        dockerfile: ./grading/notebook/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+  build-and-push-hdl:
+    needs: build-and-push-uncode-c-base
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: mr-smithers-excellent/docker-build-push@v5
+      name: Build & push Docker image hdl
+      with:
+        image: unjudge/hdl-uncode
+        tags: latest
+        registry: docker.io
+        directory: ./grading/hdl
+        dockerfile: ./grading/hdl/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+  
