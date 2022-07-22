@@ -5,7 +5,7 @@ grading=("datascience" "notebook" "multilang")
 
 for container in "${grading[@]}"; do
         echo "-------------------------------------------------------"
-        echo "- Destroing grading image: " "$container"
+        echo "- Destroying grading image: " "$container"
         echo "-------------------------------------------------------"
         docker rmi -f ingi/inginious-c-"$container"
 done
