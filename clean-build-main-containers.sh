@@ -15,7 +15,7 @@ echo "- Destroying grading image: hdl"
 echo "-------------------------------------------------------"
 docker rmi -f ingi/hdl-uncode
 echo "-------------------------------------------------------"
-echo "- Destroing grading image: uncode-c-base"
+echo "- Destroying grading image: uncode-c-base"
 echo "-------------------------------------------------------"
 docker rmi -f unjudge/uncode-c-base
 
