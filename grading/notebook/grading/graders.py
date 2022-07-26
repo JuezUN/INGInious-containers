@@ -38,6 +38,7 @@ class NotebookGrader(BaseGrader):
         self.show_runtime_errors = options.get("treat_non_zero_as_runtime_error", True)
         self.show_debug_info_for = set(options.get("show_debug_info_for", []))
         self.custom_feedback = options.get("custom_feedback", {})
+        self.diff_tool = Diff(options)
         self.response_type = options.get('response_type','json')
         self.dataset = options.get("dataset", {"url": '', 'filename': ''})
 
