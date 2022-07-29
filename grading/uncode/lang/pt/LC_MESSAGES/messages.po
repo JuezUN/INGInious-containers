@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-07-07 11:08-0500\n"
+"POT-Creation-Date: 2022-07-28 21:11-0500\n"
 "PO-Revision-Date: 2021-05-13 23:00-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt\n"
@@ -18,25 +18,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: grading/multilang/grading/graders.py:308
+#: grading/multilang/grading/graders.py:340
 msgid "Your code exceeded the output limit"
 msgstr ""
 
-#: grading/multilang/grading/graders.py:313
+#: grading/multilang/grading/graders.py:345
 msgid ""
 "Your code finished successfully. Check your output below\n"
 "."
 msgstr ""
 
-#: grading/multilang/grading/graders.py:317
+#: grading/multilang/grading/graders.py:349
 msgid "Your code did not run successfully"
 msgstr ""
 
-#: grading/multilang/grading/graders.py:322
+#: grading/multilang/grading/graders.py:354
 msgid "Long output, it was reduced."
 msgstr ""
 
-#: grading/multilang/grading/graders.py:346
+#: grading/multilang/grading/graders.py:378
 #, python-format
 msgid ""
 "Your code did not run successfully: <strong>%s</strong>, check the error "
@@ -55,32 +55,32 @@ msgid ""
 "runs correctly and try again."
 msgstr ""
 
-#: grading/notebook/grading/utils.py:18
+#: grading/notebook/grading/utils.py:23
 msgid ""
 "<br><strong>{}:</strong> There was an error while running your notebook: "
 "<br><pre>{}</pre><br>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:64
+#: grading/notebook/grading/utils.py:69
 msgid "\t- Case {}: {}"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:99
+#: grading/notebook/grading/utils.py:104
 msgid "Expand test results"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:104
+#: grading/notebook/grading/utils.py:109
 msgid "<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:107
+#: grading/notebook/grading/utils.py:112
 msgid ""
 "\n"
 "                                        <br><strong>Output "
 "difference:</strong><pre>{case_output_diff}</pre><br>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:109
+#: grading/notebook/grading/utils.py:114
 msgid ""
 "<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
 "square;\"><li>\n"
@@ -93,7 +93,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: grading/notebook/grading/utils.py:114
+#: grading/notebook/grading/utils.py:119
 msgid ""
 "<strong>Executed code:</strong><pre class=\"language-python\"><code class"
 "=\"language-python\" data-"
@@ -126,7 +126,7 @@ msgid ""
 "@@ Diff is too big and was clipped. The error might be in last lines.\n"
 msgstr ""
 
-#: grading/uncode/grading/graders_utils.py:14
+#: grading/uncode/grading/graders_utils.py:19
 msgid ""
 "**Compilation error**:\n"
 "\n"
