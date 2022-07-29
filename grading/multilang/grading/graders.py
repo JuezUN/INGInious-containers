@@ -90,15 +90,16 @@ class SimpleGrader(BaseGrader):
         # Check for errors in run
         if GraderResult.COMPILATION_ERROR in results:
             compilation_output = debug_info.get("compilation_output", "")
-            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
+            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output,"multilang",self.response_type)
         else:
             # Generate feedback string for tests format based with response type
             res_type = self.response_type
-            #Saving feedback as json
+            # Saving feedback as json
             if res_type == 'json':
                 feedback_list_json = []
                 for i, result in enumerate(results):
                     test_case = test_cases[i]
+                    #for each case we save the info for the html templates on the frontend
                     feedback_obj = {
                         "i": i,
                         "result": result,
@@ -106,10 +107,15 @@ class SimpleGrader(BaseGrader):
                         "input_sample": get_input_sample(test_case)
                     }
                     feedback_list_json.append(feedback_obj)
+                # We save the container's options required for the feedback
                 options_for_feedback = self.diff_tool.get_options_dict()
                 options_for_feedback["container_type"] = "multilang"
                 feedback_list_json.append(options_for_feedback)
+                # We also save the debug info for the feedback
                 feedback_list_json.append(debug_info)
+                # Converting the list to a json format string
+                # The json object always have this structure on multilang
+                # [ feedback_obj_test_case_1 , ... , feedback_obj_test_case_n , options_for_feedback , debug_info ]
                 feedback_str_json = json.dumps(feedback_list_json)
                 feedback_str = feedback_str_json
             #Saving feedback as rst
@@ -122,7 +128,8 @@ class SimpleGrader(BaseGrader):
                     
                 feedback_str_rst = '\n\n'.join(feedback_list_rst)
                 feedback_str = feedback_str_rst
-                
+            
+            # Create the feedback_info dict and assign the string depend on the response type
             feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
             feedback_info['global']['feedback'] = feedback_str
 

@@ -2,6 +2,7 @@
 This module contains the util functions for the grader and feedback_tools modules.
 """
 import rst
+import json
 from sys import getsizeof
 
 
@@ -10,8 +11,12 @@ def html_to_rst(html):
     return '\n\n.. raw:: html\n\n' + rst.indent_block(1, html) + '\n'
 
 
-def feedback_str_for_compilation_error(compilation_output):
-    return _("**Compilation error**:\n\n") + html_to_rst("<pre>%s</pre>" % (compilation_output,))
+def feedback_str_for_compilation_error(compilation_output,container_type,response_type="json"):
+    if response_type == "json":
+        return json.dumps({"compilation_output":compilation_output,
+                           "container_type":container_type})
+    elif response_type == "rst":
+        return _("**Compilation error**:\n\n") + html_to_rst("<pre>%s</pre>" % (compilation_output,))
 
 
 def compute_summary_result(results):

@@ -98,7 +98,7 @@ class HDLGrader(BaseGrader):
             feedback_info['global']['result'] = "failed"
             feedback_info['grade'] = 0.0
             compilation_output = debug_info.get("compilation_output", "")
-            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
+            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output,"hdl",self.response_type)
         else:
             results = project.run(None)
             res_type = self.response_type
@@ -107,6 +107,7 @@ class HDLGrader(BaseGrader):
             #Saving feedback as json  
             if res_type == 'json':
                 feedback_list_json = []
+                #for the test case we save the info for the html templates on the frontend
                 feedback_obj = {
                     "i":0,
                     "result": result,
@@ -114,10 +115,15 @@ class HDLGrader(BaseGrader):
                     "input_sample": get_input_sample(test_cases)
                 }
                 feedback_list_json.append(feedback_obj)
+                # We save the container's options required for the feedback
                 options_for_feedback = self.diff_tool.get_options_dict()
                 options_for_feedback["container_type"] = "hdl"
                 feedback_list_json.append(options_for_feedback)
+                # We also save the debug info for the feedback
                 feedback_list_json.append(debug_info)
+                # Converting the list to a json format string
+                # The json object always have this structure on hdl
+                # [ feedback_obj_test_case , options_for_feedback , debug_info ]
                 feedback_str_json = json.dumps(feedback_list_json)
                 feedback_str = feedback_str_json
             #Saving feedback as rst

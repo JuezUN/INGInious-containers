@@ -85,7 +85,7 @@ class NotebookGrader(BaseGrader):
             # Check for errors in run
             result_codes = [result.get("result", GraderResult.INTERNAL_ERROR) for result in tests_results if result]
             if GraderResult.INTERNAL_ERROR in result_codes:
-                set_feedback(_generate_feedback_info_internal_error(debug_info))
+                set_feedback(_generate_feedback_info_internal_error(debug_info,self.response_type))
             else:
                 # Generate feedback string for tests
                 res_type = self.response_type
