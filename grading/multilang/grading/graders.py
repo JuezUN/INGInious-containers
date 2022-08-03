@@ -129,9 +129,9 @@ class SimpleGrader(BaseGrader):
                 feedback_str_rst = '\n\n'.join(feedback_list_rst)
                 feedback_str = feedback_str_rst
             
-            # Create the feedback_info dict and assign the string depend on the response type
-            feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
-            feedback_info['global']['feedback'] = feedback_str
+        # Create the feedback_info dict and assign the string depend on the response type
+        feedback_info = self._generate_feedback_info(results, debug_info, weights, test_cases)
+        feedback_info['global']['feedback'] = feedback_str
 
         set_feedback(feedback_info)
 
