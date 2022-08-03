@@ -108,6 +108,20 @@ class Diff:
             diff_output = _("\n@@ Diff is too big and was clipped. The error might be in last lines.\n")
 
         return diff_output
+    
+    def get_options_dict(self):
+        """
+        This method creates a dictionary containing the information of the options required for the feedback
+
+        """
+        options = {
+            "diff_max_lines":self.diff_max_lines,
+            "diff_context_lines":self.diff_context_lines,
+            "output_diff_for":list(self.output_diff_for),
+            "custom_feedback":self.custom_feedback,
+            "show_input":self.show_input,
+        }
+        return options
 
     def to_html_block(self, test_id, result, test_case, debug_info):
         """

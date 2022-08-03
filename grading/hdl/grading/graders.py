@@ -1,3 +1,5 @@
+from distutils.log import debug
+import json
 import os
 import html
 import tempfile
@@ -6,7 +8,7 @@ import projects
 from results import GraderResult, parse_non_zero_return_code
 from zipfile import ZipFile
 from base_grader import BaseGrader
-from feedback_tools import Diff, set_feedback
+from feedback_tools import Diff, set_feedback, get_input_sample
 import graders_utils as gutils
 from submission_requests import SubmissionRequest
 from shutil import copyfile
@@ -20,6 +22,7 @@ class HDLGrader(BaseGrader):
         self.diff_tool = DiffWaveDrom(options)
         self.check_output = options.get('check_output', gutils.check_output)
         self.entity_name = options.get('entity_name', 'testbench')
+        self.response_type = options.get('response_type','json')
 
     def create_project(self, testbench_file_name, golden_file_name):
         """
@@ -95,13 +98,37 @@ class HDLGrader(BaseGrader):
             feedback_info['global']['result'] = "failed"
             feedback_info['grade'] = 0.0
             compilation_output = debug_info.get("compilation_output", "")
-            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output)
+            feedback_str = gutils.feedback_str_for_compilation_error(compilation_output,"hdl",self.response_type)
         else:
             results = project.run(None)
-
+            res_type = self.response_type
             result, debug_info['files_feedback'][testbench_file_name], feedback_info = self._construct_feedback(results)
             test_cases = (testbench_file_name, expected_output_name)
-            feedback_str = self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
+            #Saving feedback as json  
+            if res_type == 'json':
+                feedback_list_json = []
+                #for the test case we save the info for the html templates on the frontend
+                feedback_obj = {
+                    "i":0,
+                    "result": result,
+                    "test_case": test_cases,
+                    "input_sample": get_input_sample(test_cases)
+                }
+                feedback_list_json.append(feedback_obj)
+                # We save the container's options required for the feedback
+                options_for_feedback = self.diff_tool.get_options_dict()
+                options_for_feedback["container_type"] = "hdl"
+                feedback_list_json.append(options_for_feedback)
+                # We also save the debug info for the feedback
+                feedback_list_json.append(debug_info)
+                # Converting the list to a json format string
+                # The json object always have this structure on hdl
+                # [ feedback_obj_test_case , options_for_feedback , debug_info ]
+                feedback_str_json = json.dumps(feedback_list_json)
+                feedback_str = feedback_str_json
+            #Saving feedback as rst
+            elif res_type == 'rst':                
+                feedback_str = self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
 
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)

@@ -14,14 +14,19 @@ def _run_command(command, **additional_flags):
     return return_code, stdout, stderr
 
 
-def _feedback_str_for_internal_error(debug_info):
-    return _("<br><strong>{}:</strong> There was an error while running your notebook: <br><pre>{}</pre><br>").format(
-        GraderResult.INTERNAL_ERROR.name, debug_info.get("internal_error_output", ""))
+def _feedback_str_for_internal_error(debug_info, response_type="json"):
+    if response_type == "json":
+        return json.dumps({"internal_error_output":debug_info.get("internal_error_output", ""),
+                           "error_name":GraderResult.INTERNAL_ERROR.name,
+                           "container_type":"notebook"})
+    elif response_type == "rst":
+        return _("<br><strong>{}:</strong> There was an error while running your notebook: <br><pre>{}</pre><br>").format(
+            GraderResult.INTERNAL_ERROR.name, debug_info.get("internal_error_output", ""))
 
 
-def _generate_feedback_info_internal_error(debug_info):
+def _generate_feedback_info_internal_error(debug_info, response_type):
     feedback_info = {'global': {}, 'custom': {}}
-    feedback_str = _feedback_str_for_internal_error(debug_info)
+    feedback_str = _feedback_str_for_internal_error(debug_info, response_type)
     feedback_info['custom']['additional_info'] = json.dumps(debug_info)
     feedback_info['custom']['traceback'] = debug_info
     feedback_info['global']['result'] = "failed"
