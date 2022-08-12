@@ -5,6 +5,8 @@ FROM    unjudge/inginious-c-base
 
 ADD     . /INGInious
 
+RUN     dnf -y install dnf-plugins-core
+
 # Install grading library
 RUN     chmod -R 644 /INGInious/grading && \
         mkdir -p /usr/lib/python3.9/site-packages/grading && \
