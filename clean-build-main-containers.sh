@@ -30,16 +30,22 @@ echo "- Building grading image: hdl"
 echo "-------------------------------------------------------"
 docker build -t "ingi/hdl-uncode" "grading/hdl"
 
-grading=( "notebook" "multilang")
+echo "-------------------------------------------------------"
+echo "- Building grading image: multilang"
+echo "-------------------------------------------------------"
+docker build -t "ingi/inginious-c-multilang" -t "unjudge/inginious-c-multilang" "grading/multilang"
 
-for container in ${grading[@]}; do
-        echo "-------------------------------------------------------"
-        echo "- Building grading image:" "$container"
-        echo "-------------------------------------------------------"
-        docker build -t "ingi/inginious-c-"$container"" "grading/"$container""
-done
+echo "-------------------------------------------------------"
+echo "- Building grading image: notebook"
+echo "-------------------------------------------------------"
+docker build -t "ingi/inginious-c-notebook" "grading/notebook"
+
 
 echo "-------------------------------------------------------"
 echo "- Building grading image: data_science"
 echo "-------------------------------------------------------"
 docker build -t "ingi/inginious-c-datascience" "grading/data_science"
+echo "-------------------------------------------------------"
+echo "- Destroying grading image unjudge/inginious-c-multilang used to build data_science"
+echo "-------------------------------------------------------"
+docker rmi -f unjudge/inginious-c-multilang
