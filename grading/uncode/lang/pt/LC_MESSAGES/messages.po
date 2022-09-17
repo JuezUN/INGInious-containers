@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-07-28 21:25-0500\n"
+"POT-Creation-Date: 2022-09-17 08:59-0500\n"
 "PO-Revision-Date: 2021-05-13 23:00-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt\n"
@@ -132,23 +132,23 @@ msgid ""
 "\n"
 msgstr ""
 
-#: grading/uncode/grading/projects.py:41
+#: grading/uncode/grading/projects.py:42
 msgid "The memory limit was exceeded during compilation."
 msgstr ""
 
-#: grading/uncode/grading/projects.py:43
+#: grading/uncode/grading/projects.py:44
 msgid "The time limit was exceeded during compilation."
 msgstr ""
 
-#: grading/uncode/grading/projects.py:45
+#: grading/uncode/grading/projects.py:46
 msgid "Compilation failed."
 msgstr ""
 
-#: grading/uncode/grading/projects.py:47
+#: grading/uncode/grading/projects.py:48
 msgid "Unhandled grader result: "
 msgstr ""
 
-#: grading/uncode/grading/projects.py:469
+#: grading/uncode/grading/projects.py:470
 msgid "Factory does not exist: "
 msgstr ""
 

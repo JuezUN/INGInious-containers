@@ -131,8 +131,7 @@ class NotebookGrader(BaseGrader):
                 set_feedback(feedback_info)
         except Exception as e:
             debug_info = dict(internal_error_output=str(e))
-
-            set_feedback(_generate_feedback_info_internal_error(debug_info))
+            set_feedback(_generate_feedback_info_internal_error(debug_info, self.response_type))
             return
 
     def _run_all_tests(self, project, tests, weights):
