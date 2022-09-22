@@ -1,4 +1,4 @@
-FROM    unjudge/uncode-c-base
+FROM    unjudge/uncode-c-base:centos-python36
 LABEL   org.inginious.grading.name="HDL"
 
 COPY    ghdl-0.36.tar.gz /ghdl-0.36.tar.gz

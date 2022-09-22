@@ -19,7 +19,8 @@ def _run_in_sandbox(command, **subprocess_options):
     subprocess_options -- Additional options sent to subprocess.run.
     """
     try:
-        completed_process = subprocess.run(["run_student"] + command, stdout=subprocess.PIPE,
+        command_to_run = ["run_student"] + command
+        completed_process = subprocess.run(command_to_run, stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE, **subprocess_options)
 
         stdout = completed_process.stdout.decode()

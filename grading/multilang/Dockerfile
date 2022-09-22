@@ -4,20 +4,21 @@
 FROM    unjudge/uncode-c-base
 LABEL   org.inginious.grading.name="multiple_languages"
 
+
 # Add java 1.8
-RUN     yum -y install java-1.8.0-openjdk-devel
+RUN     dnf -y install java-1.8.0-openjdk-devel
 
 # Add java 1.7
-RUN     yum -y install java-1.7.0-openjdk-devel
+#RUN    yum -y install java-1.7.0-openjdk-devel
 
 # Add gcc
-RUN     yum install -y gcc gcc-c++ gdb cpp make valgrind binutils libstdc++ clang clang-devel llvm automake \
+RUN     dnf --enablerepo=powertools install -y gcc gcc-c++ gdb cpp make valgrind binutils libstdc++ clang clang-devel llvm automake \
         check check-devel CUnit CUnit-devel zlib-devel openssl-devel time jansson-devel
 
-RUN     yum clean all
+RUN     dnf clean all
 
-RUN     pip3 install antlr4-python3-runtime
+RUN     pip3.9 install antlr4-python3-runtime
 
 ADD     . /INGInious
-RUN     cp -R /INGInious/grading/.  /usr/lib/python3.6/site-packages/grading/
+RUN     cp -R /INGInious/grading/.  /usr/lib/python3.9/site-packages/grading/
 RUN     rm -R /INGInious

@@ -31,7 +31,7 @@ def _generate_feedback_info_internal_error(debug_info, response_type):
     feedback_info['custom']['traceback'] = debug_info
     feedback_info['global']['result'] = "failed"
     feedback_info['grade'] = 0.0
-    feedback_info['global']['feedback'] = html2rst(feedback_str)
+    feedback_info['global']['feedback'] = html2rst(feedback_str) if response_type == "rst" else feedback_str
     return feedback_info
 
 

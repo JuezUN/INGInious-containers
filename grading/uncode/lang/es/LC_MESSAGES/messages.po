@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  1.0\n"
 "Report-Msgid-Bugs-To: uncode_fibog@unal.edu.co\n"
-"POT-Creation-Date: 2022-07-28 21:25-0500\n"
+"POT-Creation-Date: 2022-09-17 08:59-0500\n"
 "PO-Revision-Date: 2021-05-13 18:59-0500\n"
 "Last-Translator: Cristian González <crdgonzalezca@unal.edu.co>\n"
 "Language: es\n"
@@ -173,23 +173,23 @@ msgstr ""
 "**Error de compilación**:\n"
 "\n"
 
-#: grading/uncode/grading/projects.py:41
+#: grading/uncode/grading/projects.py:42
 msgid "The memory limit was exceeded during compilation."
 msgstr "La memoria límite fue excedida en tiempo de compilación."
 
-#: grading/uncode/grading/projects.py:43
+#: grading/uncode/grading/projects.py:44
 msgid "The time limit was exceeded during compilation."
 msgstr "El tiempo límite fue excedido en tiempo de compilación."
 
-#: grading/uncode/grading/projects.py:45
+#: grading/uncode/grading/projects.py:46
 msgid "Compilation failed."
 msgstr "La compilación falló."
 
-#: grading/uncode/grading/projects.py:47
+#: grading/uncode/grading/projects.py:48
 msgid "Unhandled grader result: "
 msgstr "Resultado no manejado: "
 
-#: grading/uncode/grading/projects.py:469
+#: grading/uncode/grading/projects.py:470
 msgid "Factory does not exist: "
 msgstr "El Factory no existe: "
 
