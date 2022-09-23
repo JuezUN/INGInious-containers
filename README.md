@@ -65,6 +65,39 @@ To build a container to test changes, run the next command:
 docker build -t <container_tag> ./grading/<container_path>
 ```
 
+
+### Utility Scripts
+
+In order to facilitate testing, development and deployment, there are several different ways to build and manage the images on this repository.
+If you want to clean build an image (deleting the image if it exists before build) use ```clean-build-container.sh```
+
+```bash
+./clean-build-container.sh <container-folder-name>
+```
+
+If you want to clean build all main images of uncode (uncode-base, multilang, hdl, notebook, data science)(deleting the images if they exists before build) use
+```clean-build-main-containers.sh```
+
+```bash
+./clean-build-main-containers.sh
+```
+
+If you want to manage the images in order to manipulate the registries in DockerHub, run the following scripts:
+
+To pull all the grading images with the specified tag (if flag -t i not passed the default tag is latest):
+```bash
+./pull-registry-images.sh -t <tag>
+```
+To tag all the grading images with the specified tag (if flag -t i not passed the default tag is latest):
+```bash
+./tag-registry-images.sh -t <tag>
+```
+To push all the grading images with the specified tag to unjudge registry on DockerHub(if flag -t i not passed the default tag is latest):
+```bash
+./push-registry-images.sh -t <tag>
+```
+
+
 ### Run tests
 
 Tests have been developed for the multilang container, in case you they have changed, you can run them as follows:
