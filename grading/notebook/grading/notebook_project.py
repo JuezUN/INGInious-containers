@@ -37,6 +37,7 @@ class NotebookProjectFactory(ProjectFactory):
             _copy_files_to_student_dir(self.notebook_path)
 
         def run(input_file, **run_student_flags):
+            _copy_tests_to_student_dir()
             sandbox_flags = _parse_run_student_args(**run_student_flags)
             ok_py_command = ["ok", "--local", "--score", "-q", input_file]
             command = sandbox_flags + ok_py_command + self._additional_flags
@@ -65,6 +66,8 @@ def _copy_files_to_student_dir(notebook_filepath):
         if file and file not in no_copy_files:
             _run_command(["cp", "-r", file, "/task/student/"], cwd="/task/")
 
+def _copy_tests_to_student_dir():
+    _run_command(["cp", "-r", "ok_tests", "/task/student/"], cwd="/task/")
 
 def _convert_nb_to_python_script(notebook_path, filename):
     try:
