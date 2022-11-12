@@ -81,7 +81,7 @@ def _generate_feedback_info(grader_results, debug_info, weights, tests):
     return feedback_info
 
 
-def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_feedback):
+def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_feedback, is_staff):
     cases_debug_info = test_result["cases"]
 
     template_info = {
@@ -105,6 +105,13 @@ def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_f
         """</a><div class="collapse" id="{panel_id}">""",
         "</div>"
     ]
+    test_results_template_for_staff_html = [
+            """<a class="btn btn-default btn-link btn-xs" role="button"
+            data-toggle="collapse" href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">""" +
+            _("Expand test results (only for staff)") +
+            """</a><div class="collapse" id="{panel_id}">""",
+            "</div>"
+    ]
 
     test_custom_feedback_template_html = _("""<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>""")
 
@@ -116,13 +123,18 @@ def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_f
         href="#{case_panel_id}" aria-expanded="false"aria-controls="{case_panel_id}">Show debug info</a>
         <div class="collapse" id="{case_panel_id}">{debug_info}</div></li></ul>
         """)
+    test_case_debug_info_template_for_staff_html = _("""<ul class="list_disc" style="font-size:12px; list-style-type: square;"><li>
+            <strong>Case {case_id}:</strong><a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
+            href="#{case_panel_id}" aria-expanded="false"aria-controls="{case_panel_id}">Show debug info (only for staff)</a>
+            <div class="collapse" id="{case_panel_id}">{debug_info}</div></li></ul>
+            """)
     test_case_executed_code = _('<strong>Executed code:</strong><pre class="language-python"><code ' +
                                 'class="language-python" data-language="python">{case_code}</code></pre>' +
                                 '<script>highlight_code();</script>')
 
     result_html = [test_name_template_html[0]]
     if cases_debug_info and show_debug_info:
-        result_html.append(test_results_template_html[0])
+        result_html.append(test_results_template_html[0] if not is_staff else test_results_template_for_staff_html[0])
         if test_custom_feedback:
             template_info['custom_feedback'] = test_custom_feedback
             result_html.append(test_custom_feedback_template_html)
@@ -144,8 +156,8 @@ def _result_to_html(test_id, test_result, weight, show_debug_info, test_custom_f
                 "case_panel_id": "collapse_debug_test_%s_case_%s" % (str(test_id), str(i)),
                 "debug_info": ''.join(debug_info).replace("{", "{{").replace("}", "}}")
             }
-            result_html.append(test_case_debug_info_template_html.format(**case_data))
-        result_html.append(test_results_template_html[1])
+            result_html.append(test_case_debug_info_template_html.format(**case_data) if not is_staff else test_case_debug_info_template_for_staff_html.format(**case_data))
+        result_html.append(test_results_template_html[1] if not is_staff else test_results_template_for_staff_html[1])
 
     result_html.append(test_name_template_html[1])
     result_html = ''.join(result_html).format(**template_info)

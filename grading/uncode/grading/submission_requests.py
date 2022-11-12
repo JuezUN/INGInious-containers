@@ -42,7 +42,11 @@ class SubmissionRequest:
         assert action in ["customtest", "submit"]
 
         code = input.get_input(problem_id)
-
+        try:
+            is_staff = input.get_input("is_staff")
+        except KeyError:
+            is_staff = False
+            
         if language_name is None:
             language_name = input.get_input(problem_id + "/language")
         problem_type = input.get_input(problem_id + "/type")
@@ -55,4 +59,5 @@ class SubmissionRequest:
         self.code = code
         self.language_name = language_name
         self.problem_type = problem_type
+        self.is_staff = is_staff if is_staff else False
         self.custom_input = custom_input
