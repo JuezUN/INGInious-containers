@@ -95,7 +95,7 @@ class NotebookGrader(BaseGrader):
                     for i, test_result in enumerate(tests_results):
                         if not test_result:
                             continue
-                        show_debug_info = i in self.show_debug_info_for
+                        show_debug_info = i in self.show_debug_info_for or self.submission_request.is_staff
                         test_custom_feedback = self.custom_feedback.get(i, "")
                         
                         feedback_obj = {
@@ -108,6 +108,7 @@ class NotebookGrader(BaseGrader):
                         feedback_list_json.append(feedback_obj)
                     options_for_feedback = self.diff_tool.get_options_dict()
                     options_for_feedback["container_type"] = "notebook"
+                    options_for_feedback["is_staff"] = self.submission_request.is_staff
                     feedback_list_json.append(options_for_feedback)
                     feedback_list_json.append(debug_info)
                     feedback_str_json = json.dumps(feedback_list_json)
@@ -119,10 +120,10 @@ class NotebookGrader(BaseGrader):
                         if not test_result:
                             continue
 
-                        show_debug_info = i in self.show_debug_info_for
+                        show_debug_info = i in self.show_debug_info_for or self.submission_request.is_staff
                         test_custom_feedback = self.custom_feedback.get(i, "")
                         feedback_list_rst.append(
-                            _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback))
+                            _result_to_html(i, test_result, weights[i], show_debug_info, test_custom_feedback, self.submission_request.is_staff))
                     feedback_str = '\n\n'.join(feedback_list_rst)
 
                 feedback_info = _generate_feedback_info(tests_results, debug_info, weights, tests)

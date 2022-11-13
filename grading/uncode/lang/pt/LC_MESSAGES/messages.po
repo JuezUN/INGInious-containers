@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-09-28 14:50-0500\n"
+"POT-Creation-Date: 2022-11-12 18:10-0500\n"
 "PO-Revision-Date: 2021-05-13 23:00-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt\n"
@@ -18,25 +18,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: grading/multilang/grading/graders.py:340
+#: grading/multilang/grading/graders.py:341
 msgid "Your code exceeded the output limit"
 msgstr ""
 
-#: grading/multilang/grading/graders.py:345
+#: grading/multilang/grading/graders.py:346
 msgid ""
 "Your code finished successfully. Check your output below\n"
 "."
 msgstr ""
 
-#: grading/multilang/grading/graders.py:349
+#: grading/multilang/grading/graders.py:350
 msgid "Your code did not run successfully"
 msgstr ""
 
-#: grading/multilang/grading/graders.py:354
+#: grading/multilang/grading/graders.py:355
 msgid "Long output, it was reduced."
 msgstr ""
 
-#: grading/multilang/grading/graders.py:378
+#: grading/multilang/grading/graders.py:379
 #, python-format
 msgid ""
 "Your code did not run successfully: <strong>%s</strong>, check the error "
@@ -69,18 +69,22 @@ msgstr ""
 msgid "Expand test results"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:109
+#: grading/notebook/grading/utils.py:111
+msgid "Expand test results (only for staff)"
+msgstr ""
+
+#: grading/notebook/grading/utils.py:116
 msgid "<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:112
+#: grading/notebook/grading/utils.py:119
 msgid ""
 "\n"
 "                                        <br><strong>Output "
 "difference:</strong><pre>{case_output_diff}</pre><br>"
 msgstr ""
 
-#: grading/notebook/grading/utils.py:114
+#: grading/notebook/grading/utils.py:121
 msgid ""
 "<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
 "square;\"><li>\n"
@@ -93,7 +97,20 @@ msgid ""
 "        "
 msgstr ""
 
-#: grading/notebook/grading/utils.py:119
+#: grading/notebook/grading/utils.py:126
+msgid ""
+"<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
+"square;\"><li>\n"
+"            <strong>Case {case_id}:</strong><a class=\"btn btn-default "
+"btn-link btn-xs\" role=\"button\" data-toggle=\"collapse\" \n"
+"            href=\"#{case_panel_id}\" aria-expanded=\"false\"aria-"
+"controls=\"{case_panel_id}\">Show debug info (only for staff)</a>\n"
+"            <div class=\"collapse\" "
+"id=\"{case_panel_id}\">{debug_info}</div></li></ul>\n"
+"            "
+msgstr ""
+
+#: grading/notebook/grading/utils.py:131
 msgid ""
 "<strong>Executed code:</strong><pre class=\"language-python\"><code class"
 "=\"language-python\" data-"
@@ -104,7 +121,11 @@ msgstr ""
 msgid "Toggle diff"
 msgstr ""
 
-#: grading/uncode/grading/feedback_tools.py:56
+#: grading/uncode/grading/feedback_tools.py:59
+msgid "Toggle diff (only for staff)"
+msgstr ""
+
+#: grading/uncode/grading/feedback_tools.py:61
 msgid ""
 "<p>Input preview: {title_input}</p>\n"
 "                                  <pre class=\"input-area\" "
@@ -116,11 +137,11 @@ msgid ""
 "                                  "
 msgstr ""
 
-#: grading/uncode/grading/feedback_tools.py:63
+#: grading/uncode/grading/feedback_tools.py:68
 msgid "<p>Custom feedback</p><pre>{custom_feedback}</pre><br>"
 msgstr ""
 
-#: grading/uncode/grading/feedback_tools.py:108
+#: grading/uncode/grading/feedback_tools.py:113
 msgid ""
 "\n"
 "@@ Diff is too big and was clipped. The error might be in last lines.\n"

@@ -110,6 +110,7 @@ class SimpleGrader(BaseGrader):
                 # We save the container's options required for the feedback
                 options_for_feedback = self.diff_tool.get_options_dict()
                 options_for_feedback["container_type"] = "multilang"
+                options_for_feedback["is_staff"] = self.submission_request.is_staff
                 feedback_list_json.append(options_for_feedback)
                 # We also save the debug info for the feedback
                 feedback_list_json.append(debug_info)
@@ -124,7 +125,7 @@ class SimpleGrader(BaseGrader):
             
                 for i, result in enumerate(results):
                     test_case = test_cases[i]
-                    feedback_list_rst.append(self.diff_tool.to_html_block(i, result, test_case, debug_info))
+                    feedback_list_rst.append(self.diff_tool.to_html_block(i, result, test_case, debug_info, self.submission_request.is_staff))
                     
                 feedback_str_rst = '\n\n'.join(feedback_list_rst)
                 feedback_str = feedback_str_rst
@@ -238,7 +239,7 @@ class SimpleGrader(BaseGrader):
                 diff = None
                 if self.generate_diff and (result == GraderResult.WRONG_ANSWER or
                                            result == GraderResult.PRESENTATION_ERROR) and \
-                        input_filename in self.output_diff_for:
+                        (input_filename in self.output_diff_for or self.submission_request.is_staff):
                     diff = html.escape(self.diff_tool.compute(stdout, expected_output))
 
                 # As output might be very long, store string of max 50 KBs.

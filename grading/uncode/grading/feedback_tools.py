@@ -53,6 +53,11 @@ class Diff:
                                     href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">""" +
                                            _("Toggle diff") + """</a> <div class="collapse" id="{panel_id}">""",
                                            """</div></li></ul>"""]
+        self.toggle_debug_info_template_for_staff = ["""<ul><li><strong>Test {test_id}: {result_name} </strong>
+                                    <a class="btn btn-default btn-link btn-xs" role="button" data-toggle="collapse" 
+                                    href="#{panel_id}" aria-expanded="false" aria-controls="{panel_id}">""" +
+                                           _("Toggle diff (only for staff)") + """</a> <div class="collapse" id="{panel_id}">""",
+                                           """</div></li></ul>"""]
         self.input_template = _("""<p>Input preview: {title_input}</p>
                                   <pre class="input-area" id="{block_id}-input">{input_text}</pre>
                                   <div id="{title_input}_download_link"></div>
@@ -123,7 +128,7 @@ class Diff:
         }
         return options
 
-    def to_html_block(self, test_id, result, test_case, debug_info):
+    def to_html_block(self, test_id, result, test_case, debug_info, is_staff):
         """
         This method creates a html block (rst embedding html) for a single test case.
 
@@ -138,7 +143,7 @@ class Diff:
             a single test case.
         """
         input_filename = test_case[0]
-        if result in [GraderResult.ACCEPTED, GraderResult.INTERNAL_ERROR] or input_filename not in self.output_diff_for:
+        if result in [GraderResult.ACCEPTED, GraderResult.INTERNAL_ERROR] or input_filename not in self.output_diff_for and not is_staff:
             text = self.not_debug_info_template.format(
                 test_id + 1, result.name)
             return html2rst(text)
@@ -156,7 +161,8 @@ class Diff:
             "input_text": input_text,
             "title_input": test_case[0]
         }
-        template = [self.toggle_debug_info_template[0]]
+        template = [self.toggle_debug_info_template[0]] if not is_staff else [self.toggle_debug_info_template_for_staff[0]]
+
 
         if input_filename in self.custom_feedback:
             template_info["custom_feedback"] = self.custom_feedback[input_filename]
