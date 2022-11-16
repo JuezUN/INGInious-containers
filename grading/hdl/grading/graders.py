@@ -176,7 +176,7 @@ def handle_problem_action(problem_id, testbench, output, options=None):
 
 class DiffWaveDrom(Diff):
     def hdl_to_html_block(self, test_id, result, test_case, debug_info):
-        html_block = self.to_html_block(test_id, result, test_case, debug_info)
+        html_block = self.to_html_block(test_id, result, test_case, debug_info, False)
         if html_block.find("updateDiffBlock") != -1:
             html_block = html_block.replace("updateDiffBlock", "updateWaveDromBlock")
         return html_block
