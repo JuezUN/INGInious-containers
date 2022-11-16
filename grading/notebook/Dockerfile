@@ -19,7 +19,7 @@ RUN     pip3.9 install requests==2.22.0
 RUN     pip3.9 install qiskit[visualization]==0.37.2
 
 #Installing Dask
-RUN     pip3.9 install dask[complete]==2022.9.2
+RUN     pip3.9 install dask[complete]==2022.10.2 dask_ml==2022.5.27
 # Download nltk data
 # RUN python3 -m nltk.downloader -d /usr/local/share/nltk_data all
 
