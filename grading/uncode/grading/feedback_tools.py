@@ -128,7 +128,7 @@ class Diff:
         }
         return options
 
-    def to_html_block(self, test_id, result, test_case, debug_info, is_staff):
+    def to_html_block(self, test_id, result, test_case, debug_info, is_staff=False):
         """
         This method creates a html block (rst embedding html) for a single test case.
 

@@ -118,6 +118,7 @@ class HDLGrader(BaseGrader):
                 # We save the container's options required for the feedback
                 options_for_feedback = self.diff_tool.get_options_dict()
                 options_for_feedback["container_type"] = "hdl"
+                options_for_feedback["is_staff"] = self.submission_request.is_staff
                 feedback_list_json.append(options_for_feedback)
                 # We also save the debug info for the feedback
                 feedback_list_json.append(debug_info)
@@ -128,7 +129,7 @@ class HDLGrader(BaseGrader):
                 feedback_str = feedback_str_json
             #Saving feedback as rst
             elif res_type == 'rst':                
-                feedback_str = self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info)
+                feedback_str = self.diff_tool.hdl_to_html_block(0, result, test_cases, debug_info, self.submission_request.is_staff)
 
         feedback_info['global']['feedback'] = feedback_str
         set_feedback(feedback_info)
@@ -175,8 +176,8 @@ def handle_problem_action(problem_id, testbench, output, options=None):
 
 
 class DiffWaveDrom(Diff):
-    def hdl_to_html_block(self, test_id, result, test_case, debug_info):
-        html_block = self.to_html_block(test_id, result, test_case, debug_info)
+    def hdl_to_html_block(self, test_id, result, test_case, debug_info, is_staff):
+        html_block = self.to_html_block(test_id, result, test_case, debug_info, is_staff)
         if html_block.find("updateDiffBlock") != -1:
             html_block = html_block.replace("updateDiffBlock", "updateWaveDromBlock")
         return html_block
