@@ -11,9 +11,9 @@ import tempfile
 import projects
 from sys import getsizeof
 import gc
-
+import tarfile
 from results import GraderResult, parse_non_zero_return_code, SandboxCodes
-from zipfile import ZipFile
+from zipfile import ZipFile, is_zipfile
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback, get_input_sample
 import graders_utils as gutils
@@ -63,15 +63,21 @@ class SimpleGrader(BaseGrader):
         if request.problem_type == 'code_file_multiple_languages':
             # Create project directory to add source code and unzip files
             project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
-
+            
+            file_path = project_directory + ".zip"
             # Add source code to zip file
-            with open(project_directory + ".zip", "wb") as project_file:
+            with open(file_path, "wb") as project_file:
                 project_file.write(request.code)
-
+            # Check if file is tar or zip file
+            if tarfile.is_tarfile(file_path):
             # Unzip all the files on the project directory
-            with ZipFile(project_directory + ".zip") as project_file:
-                project_file.extractall(path=project_directory)
-
+                with tarfile.open(file_path) as project_file:
+                    project_file.extractall(path=project_directory)
+            elif is_zipfile(file_path):
+             # Unzip all the files on the project directory
+                with ZipFile(file_path) as project_file:
+                    project_file.extractall(path=project_directory)
+            # Finally create the project
             project = project_factory.create_from_directory(project_directory)
             return project
 
