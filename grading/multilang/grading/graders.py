@@ -4,7 +4,7 @@ the submission requests.
 
 This module works with the help of the libraries on its base container (uncode).
 """
-
+import os
 import json
 import html
 import tempfile
@@ -64,8 +64,12 @@ class SimpleGrader(BaseGrader):
             # Create project directory to add source code and unzip files
             project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
             
-            file_path = project_directory + ".zip"
-            # Add source code to zip file
+            # Source file path is project_directory path plus an extension
+            # to write the file with the same name that the temporal project_directory
+            file_path = project_directory + ".file"
+            
+            # We write the file next to the project directory, so the contents of
+            # the extracted file is available in the temporal project_directory
             with open(file_path, "wb") as project_file:
                 project_file.write(request.code)
             # Check if file is tar or zip file
@@ -77,6 +81,11 @@ class SimpleGrader(BaseGrader):
              # Unzip all the files on the project directory
                 with ZipFile(file_path) as project_file:
                     project_file.extractall(path=project_directory)
+                    
+            #We check if the extracted files are the project or a single directory with th real project
+            files = [f for f in os.listdir(project_directory)]
+            if len(files) == 1 and os.path.isdir(os.path.join(project_directory,files[0])):
+                project_directory = os.path.join(project_directory,files[0])
             # Finally create the project
             project = project_factory.create_from_directory(project_directory)
             return project
