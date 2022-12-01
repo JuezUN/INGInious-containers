@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  1.0\n"
 "Report-Msgid-Bugs-To: uncode_fibog@unal.edu.co\n"
-"POT-Creation-Date: 2022-11-12 18:10-0500\n"
+"POT-Creation-Date: 2022-12-01 10:02-0500\n"
 "PO-Revision-Date: 2021-05-13 18:59-0500\n"
 "Last-Translator: Cristian González <crdgonzalezca@unal.edu.co>\n"
 "Language: es\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: grading/multilang/grading/graders.py:341
+#: grading/multilang/grading/graders.py:356
 msgid "Your code exceeded the output limit"
 msgstr "El código excedió el límite de salida estándar"
 
-#: grading/multilang/grading/graders.py:346
+#: grading/multilang/grading/graders.py:361
 msgid ""
 "Your code finished successfully. Check your output below\n"
 "."
@@ -31,15 +31,15 @@ msgstr ""
 " abajo\n"
 "."
 
-#: grading/multilang/grading/graders.py:350
+#: grading/multilang/grading/graders.py:365
 msgid "Your code did not run successfully"
 msgstr "El código no se ejecutó satisfactoriamente"
 
-#: grading/multilang/grading/graders.py:355
+#: grading/multilang/grading/graders.py:370
 msgid "Long output, it was reduced."
 msgstr "Salida estándar muy grande, fue reducida."
 
-#: grading/multilang/grading/graders.py:379
+#: grading/multilang/grading/graders.py:394
 #, python-format
 msgid ""
 "Your code did not run successfully: <strong>%s</strong>, check the error "
@@ -81,9 +81,8 @@ msgid "Expand test results"
 msgstr "Expandir resultados del test"
 
 #: grading/notebook/grading/utils.py:111
-#, fuzzy
 msgid "Expand test results (only for staff)"
-msgstr "Expandir resultados del test"
+msgstr "Expandir resultados del test (solo para staff)"
 
 #: grading/notebook/grading/utils.py:116
 msgid "<br><strong>Custom feedback:</strong><br><pre>{custom_feedback}</pre>"
@@ -124,7 +123,6 @@ msgstr ""
 "        "
 
 #: grading/notebook/grading/utils.py:126
-#, fuzzy
 msgid ""
 "<ul class=\"list_disc\" style=\"font-size:12px; list-style-type: "
 "square;\"><li>\n"
@@ -141,7 +139,8 @@ msgstr ""
 "        <strong>Caso {case_id}:</strong><a class=\"btn btn-default btn-"
 "link btn-xs\" role=\"button\" data-toggle=\"collapse\" \n"
 "        href=\"#{case_panel_id}\" aria-expanded=\"false\"aria-"
-"controls=\"{case_panel_id}\">Mostrar información de depuración</a>\n"
+"controls=\"{case_panel_id}\">Mostrar información de depuración (solo para"
+" staff)</a>\n"
 "        <div class=\"collapse\" "
 "id=\"{case_panel_id}\">{debug_info}</div></li></ul>\n"
 "        "

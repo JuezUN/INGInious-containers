@@ -4,16 +4,16 @@ the submission requests.
 
 This module works with the help of the libraries on its base container (uncode).
 """
-
+import os
 import json
 import html
 import tempfile
 import projects
 from sys import getsizeof
 import gc
-
+import tarfile
 from results import GraderResult, parse_non_zero_return_code, SandboxCodes
-from zipfile import ZipFile
+from zipfile import ZipFile, is_zipfile
 from base_grader import BaseGrader
 from feedback_tools import Diff, set_feedback, get_input_sample
 import graders_utils as gutils
@@ -63,15 +63,30 @@ class SimpleGrader(BaseGrader):
         if request.problem_type == 'code_file_multiple_languages':
             # Create project directory to add source code and unzip files
             project_directory = tempfile.mkdtemp(dir=projects.CODE_WORKING_DIR)
-
-            # Add source code to zip file
-            with open(project_directory + ".zip", "wb") as project_file:
+            
+            # Source file path is project_directory path plus an extension
+            # to write the file with the same name that the temporal project_directory
+            file_path = project_directory + ".file"
+            
+            # We write the file next to the project directory, so the contents of
+            # the extracted file is available in the temporal project_directory
+            with open(file_path, "wb") as project_file:
                 project_file.write(request.code)
-
+            # Check if file is tar or zip file
+            if tarfile.is_tarfile(file_path):
             # Unzip all the files on the project directory
-            with ZipFile(project_directory + ".zip") as project_file:
-                project_file.extractall(path=project_directory)
-
+                with tarfile.open(file_path) as project_file:
+                    project_file.extractall(path=project_directory)
+            elif is_zipfile(file_path):
+             # Unzip all the files on the project directory
+                with ZipFile(file_path) as project_file:
+                    project_file.extractall(path=project_directory)
+                    
+            #We check if the extracted files are the project or a single directory with th real project
+            files = [f for f in os.listdir(project_directory)]
+            if len(files) == 1 and os.path.isdir(os.path.join(project_directory,files[0])):
+                project_directory = os.path.join(project_directory,files[0])
+            # Finally create the project
             project = project_factory.create_from_directory(project_directory)
             return project
 
