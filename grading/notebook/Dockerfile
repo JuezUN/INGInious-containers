@@ -26,7 +26,8 @@ RUN     pip3.9 install Unidecode==1.3.6
 RUN     pip3.9 install gensim==4.2.0
 # Installing spacy
 RUN     pip3.9 install spacy==3.4.3
-
+# Installing pyarrow
+RUN     pip3.9 install pyarrow==10.0.1
 
 # Download nltk data
 # RUN python3 -m nltk.downloader -d /usr/local/share/nltk_data all
