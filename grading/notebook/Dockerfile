@@ -26,6 +26,8 @@ RUN     pip3.9 install Unidecode==1.3.6
 RUN     pip3.9 install gensim==4.2.0
 # Installing spacy
 RUN     pip3.9 install spacy==3.4.3
+# Download spacy model es
+RUN     python3 -m spacy download es_core_news_sm
 # Installing pyarrow
 RUN     pip3.9 install pyarrow==10.0.1
 
