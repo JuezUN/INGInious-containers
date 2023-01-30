@@ -31,7 +31,7 @@ RUN     python3 -m spacy download es_core_news_sm
 # Installing pyarrow
 RUN     pip3.9 install pyarrow==10.0.1
 # Installing wordcloud
-RUN     pip3.9 install wordcloud
+RUN     pip3.9 install wordcloud==1.8.2.2
 
 # Download nltk data
 # RUN python3 -m nltk.downloader -d /usr/local/share/nltk_data all
