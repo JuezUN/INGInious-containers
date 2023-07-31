@@ -40,7 +40,7 @@ RUN     pip3.9 uninstall attrs jsonschema -y
 RUN     pip3.9 install attrs==19.3.0 jsonschema==2.6.0
 
 #You can install In order to debug libs versions problems
-RUN     pip3.9 install pipdeptree
+#RUN     pip3.9 install pipdeptree
 
 
 # Download nltk data
