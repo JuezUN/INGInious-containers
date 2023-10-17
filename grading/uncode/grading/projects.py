@@ -448,9 +448,9 @@ _ALL_FACTORIES = {
                                 bootclasspath="/usr/lib/jvm/java-1.7.0-openjdk/jre/lib/rt.jar"),
     "java8": JavaProjectFactory(),
     "cpp": CppProjectFactory(["-O2"]),
-    "cpp11": CppProjectFactory(additional_flags=["-std=c++11", "-O2"]),
+    "cpp11": CppProjectFactory(additional_flags=["-std=c++11", "-O2", "-lm"]),
     "c": CProjectFactory(["-O2"]),
-    "c11": CProjectFactory(additional_flags=["-std=c11", "-O2"]),
+    "c11": CProjectFactory(additional_flags=["-std=c11", "-O2", "-lm"]),
     "verilog": VerilogProjectFactory(),
     "vhdl": VHDLProjectFactory()
 }
