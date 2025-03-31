@@ -184,7 +184,7 @@ Project page: <https://juezun.github.io/>
 [inginious_url]: https://github.com/UCL-INGI/INGInious-containers
 [python_url]: https://www.python.org/
 [uncode_wiki_url]: https://github.com/JuezUN/INGInious/wiki
-[project_url]: https://github.com/orgs/JuezUN/projects/3
+[project_url]: https://github.com/JuezUN/INGInious/issues
 [contributing_url]: https://github.com/JuezUN/INGInious-containers/blob/master/CONTRIBUTING.md
 [base_container_github_url]: https://github.com/JuezUN/INGInious/tree/master/base-containers/base
 [unjudge/inginious-c-base_url]: https://hub.docker.com/r/unjudge/inginious-c-base
